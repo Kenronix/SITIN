@@ -1,0 +1,169 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #4B0082; /* Dark Violet */
+    color: white;
+    height: 100vh;
+    padding-top: 20px;
+    position: fixed;
+}
+
+.sidebar h2 {
+    text-align: center;
+    color: #FFA500; /* Yellow-Orange */
+    padding: 30px 0;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 20px;
+    text-align: left;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: block;
+}
+
+.sidebar ul li a:hover {
+
+    color: #FFA500;
+
+}
+
+.content {
+    margin-left: 260px;
+    padding: 20px;
+    width: calc(100% - 260px);
+}
+
+/* Reservation Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: #4B0082; /* Dark Violet */
+    color: white;
+}
+
+th, td {
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+
+}
+
+
+
+.status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.status-pending {
+    background-color: #FFA500; /* Yellow-Orange */
+    color: white;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-completed {
+    background-color: #007bff;
+    color: white;
+}
+
+.action-btn {
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin: 2px;
+    font-size: 16px;
+}
+
+.view-reservation-btn {
+    color: #007bff;
+}
+
+.approve-reservation-btn {
+    color: #28a745;
+}
+
+.reject-reservation-btn {
+    color: #dc3545;
+}
+
+.no-data {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+}
+
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    color: black;
+    margin-bottom: 5px;
+}
+
+.form-control {
+    width: 1000px;
+    padding: 10px;
+    border: 1px solid #764ba2;
+    border-radius: 5px;
+    color: #494949;
+    font-size: 16px;
+}
+
+.form-control:focus {
+    border-color: #ff9f43;
+    outline: none;
+    box-shadow: 0 0 5px rgba(255, 159, 67, 0.7);
+}
+
+.btn-primary {
+    background-color: #ff9f43;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: #e87e0c;
+}
+
+

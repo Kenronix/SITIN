@@ -1,0 +1,129 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+#container {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+#image {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.logo {
+    width: 150px;
+    height: auto;
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    text-align: center;
+    color: #666;
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+label {
+    color: #555;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+input[type="text"],
+input[type="password"] {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    border-color: #4a90e2;
+    outline: none;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+}
+
+#button {
+    background-color: #4a90e2;
+    color: white;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#button:hover {
+    background-color: #357abd;
+}
+
+.error {
+    background-color: #ff5757;
+    color: white;
+    padding: 0.8rem;
+    border-radius: 5px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.register {
+    text-align: center;
+    color: #4a90e2;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    margin-top: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.register:hover {
+    color: #357abd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    #container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    .logo {
+        width: 120px;
+    }
+}

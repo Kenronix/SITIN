@@ -1,0 +1,224 @@
+:root {
+    /* Color Palette */
+    --primary-dark-violet: #4A0E4E;
+    --secondary-dark-violet: #6A1B7C;
+    --accent-yellow: #FFD700;
+    --light-yellow: #FFF4C2;
+    --text-color: #FFFFFF;
+    --background-color: #2C0735;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+.content-area {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--primary-dark-violet);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+    color: var(--accent-yellow);
+    border-bottom: 2px solid var(--accent-yellow);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.search-container {
+    background-color: var(--secondary-dark-violet);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.search-container input {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: 1px solid var(--accent-yellow);
+}
+
+.search-container button {
+    background-color: var(--accent-yellow);
+    color: var(--primary-dark-violet);
+    border: none;
+}
+
+.tab-container {
+    background-color: var(--secondary-dark-violet);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tab-buttons {
+    display: flex;
+    background-color: var(--primary-dark-violet);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 15px;
+    background-color: var(--primary-dark-violet);
+    color: var(--text-color);
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.tab-btn.active, .tab-btn:hover {
+    background-color: var(--accent-yellow);
+    color: var(--primary-dark-violet);
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table th {
+    background-color: var(--primary-dark-violet);
+    color: var(--accent-yellow);
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--accent-yellow);
+}
+
+table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--secondary-dark-violet);
+    color: var(--text-color);
+}
+
+table tr:nth-child(even) {
+    background-color: rgba(106, 27, 124, 0.3);
+}
+
+table tr:hover {
+    background-color: rgba(255, 215, 0, 0.2);
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.status-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-rejected {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-completed {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.action-btn {
+    background-color: var(--accent-yellow);
+    color: var(--primary-dark-violet);
+    border: none;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.action-btn:hover {
+    background-color: var(--light-yellow);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: 1px solid var(--accent-yellow);
+    border-radius: 4px;
+}
+
+.btn-primary {
+    background-color: var(--accent-yellow);
+    color: var(--primary-dark-violet);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--light-yellow);
+    padding: 20px;
+    background-color: var(--background-color);
+}
+
+.modal-content {
+    background-color: var(--secondary-dark-violet);
+    color: var(--text-color);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--accent-yellow);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--accent-yellow);
+}
+
+.feedback-details .row {
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: var(--primary-dark-violet);
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tab-buttons {
+        flex-direction: column;
+    }
+
+    .tab-btn {
+        padding: 15px;
+    }
+
+    table {
+        font-size: 0.9em;
+    }
+}
