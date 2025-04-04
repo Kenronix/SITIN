@@ -78,5 +78,44 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
         </table>
         
     </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all logout buttons
+            const logoutButtons = document.querySelectorAll('.reject-btn');
+            
+            logoutButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const sitInId = this.getAttribute('data-id');
+                    
+                    if (confirm('Are you sure you want to log this student out? This will reduce their remaining session count by 1.')) {
+                        // Send AJAX request to process the logout
+                        fetch('process_logout.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'sit_in_id=' + sitInId
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Student logged out successfully. Remaining sessions reduced by 1.');
+                                // Reload the page to update the table
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while processing the logout.');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

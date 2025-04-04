@@ -52,10 +52,7 @@ if ($check_stmt->fetchColumn() > 0) {
     exit;
 }
 
-// Prepare SQL statement to reduce remaining sessions
-$reduce_session_sql = "UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = :id_number AND remaining_sessions > 0";
-$reduce_session_stmt = $pdo->prepare($reduce_session_sql);
-$reduce_session_stmt->execute(['id_number' => $id_number]);
+
 
 // Prepare SQL statement to create sit-in
 $sql = "INSERT INTO sit_ins (id_number, lab, purpose, time_in, date) 

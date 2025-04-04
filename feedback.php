@@ -4,8 +4,6 @@ include 'conn.php'; // Database connection
 
 $stmt = $pdo->query("SELECT id_number, CONCAT(firstname, ' ', lastname) AS name, course, year_level, email, remaining_sessions FROM users WHERE role = 'student' ORDER BY name ASC");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -42,17 +40,16 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Lab</th>
                     <th>Date</th>
                     <th>Comments</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php 
-                // Get feedback from database
+                // Get feedback from database - sorting by the full timestamp
                 $feedback_stmt = $pdo->query("SELECT f.id, f.id_number, CONCAT(u.firstname, ' ', u.lastname) AS student_name, 
-                                            f.lab, f.date, f.comments
+                                            f.lab, f.date, f.comments, f.created_at
                                             FROM feedback f
                                             JOIN users u ON f.id_number = u.id_number
-                                            ORDER BY f.date DESC");
+                                            ORDER BY f.created_at DESC");
                 $feedbacks = $feedback_stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 if (!empty($feedbacks)): 
@@ -64,11 +61,6 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td><?= htmlspecialchars($feedback['lab']) ?></td>
                         <td><?= htmlspecialchars(date('F d, Y', strtotime($feedback['date']))) ?></td>
                         <td><?= htmlspecialchars($feedback['comments']) ?></td>
-                        <td>
-                            <button class="action-btn view-feedback-btn" data-id="<?= $feedback['id'] ?>">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </td>
                     </tr>
                 <?php 
                     endforeach; 
@@ -83,45 +75,43 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-        
-            // Handle view feedback button clicks
-            document.querySelectorAll('.view-feedback-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const feedbackId = this.getAttribute('data-id');
-                    
-                    // AJAX request to get feedback details
-                    fetch(`admin.php?action=view_feedback&feedback_id=${feedbackId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const feedback = data.feedback;
-                                
-                                // Populate the modal with feedback details
-                                document.getElementById('view-feedback-student').textContent = feedback.student_name;
-                                document.getElementById('view-feedback-lab').textContent = feedback.lab;
-                                document.getElementById('view-feedback-date').textContent = new Date(feedback.date).toLocaleDateString('en-US', {
-                                    weekday: 'long',
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                });
-                                
-                                document.getElementById('view-feedback-comments').textContent = 
-                                    feedback.comments ? feedback.comments : 'No comments provided';
-                                
-                                // Show the modal
-                                new bootstrap.Modal(document.getElementById('viewFeedbackModal')).show();
-                            } else {
-                                alert('Error: ' + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('An error occurred while fetching feedback details');
-                        });
-                });
+        // Handle view feedback button clicks
+        document.querySelectorAll('.view-feedback-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const feedbackId = this.getAttribute('data-id');
+                
+                // AJAX request to get feedback details
+                fetch(`admin.php?action=view_feedback&feedback_id=${feedbackId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const feedback = data.feedback;
+                            
+                            // Populate the modal with feedback details
+                            document.getElementById('view-feedback-student').textContent = feedback.student_name;
+                            document.getElementById('view-feedback-lab').textContent = feedback.lab;
+                            document.getElementById('view-feedback-date').textContent = new Date(feedback.date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            });
+                            
+                            document.getElementById('view-feedback-comments').textContent = 
+                                feedback.comments ? feedback.comments : 'No comments provided';
+                            
+                            // Show the modal
+                            new bootstrap.Modal(document.getElementById('viewFeedbackModal')).show();
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while fetching feedback details');
+                    });
             });
-
+        });
     </script>
 </body>
 </html>

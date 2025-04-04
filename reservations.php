@@ -106,6 +106,7 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="admins.css">
+
 </head>
 <body>
     <div class="sidebar">
@@ -170,8 +171,8 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
                                 <td>
                                     <button class="action-btn view-reservation-btn" data-id="<?= $reservation['id'] ?>"><i class="fas fa-eye"></i>See Details</button>
                                     <?php if ($reservation['status'] == 'Pending'): ?>
-                                        <button class="action-btn approve-reservation-btn" data-id="<?= $reservation['id'] ?>"><i class="fas fa-check"></i></button>
-                                        <button class="action-btn reject-reservation-btn" data-id="<?= $reservation['id'] ?>"><i class="fas fa-times"></i></button>
+                                        <button class="action-btn approve-reservation-btn" data-id="<?= $reservation['id'] ?>">Approve</button>
+                                        <button class="action-btn reject-reservation-btn" data-id="<?= $reservation['id'] ?>">Disapprove</button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -184,5 +185,6 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
                 </tbody>
             </table>
     </div>
+    
 </body>
 </html>

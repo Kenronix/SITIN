@@ -63,24 +63,6 @@ $history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
             color: blue;
             font-weight: bold;
         }
-        .rating {
-            unicode-bidi: bidi-override;
-            direction: rtl;
-            text-align: center;
-        }
-        .rating > span {
-            display: inline-block;
-            position: relative;
-            width: 1.1em;
-            font-size: 1.5em;
-            cursor: pointer;
-        }
-        .rating > span:hover:before,
-        .rating > span:hover ~ span:before {
-            content: "\2605";
-            position: absolute;
-            color: gold;
-        }
     </style>
 </head>
 <body>
@@ -166,22 +148,8 @@ $history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="hidden" id="date" name="date">
                         
                         <div class="mb-3">
-                            <label class="form-label">How was your experience?</label>
-                            <div class="text-center">
-                                <div class="rating-stars">
-                                    <input type="radio" id="star1" name="rating" value="1" required><label for="star1"></label>
-                                    <input type="radio" id="star2" name="rating" value="2"><label for="star2"></label>
-                                    <input type="radio" id="star3" name="rating" value="3"><label for="star3"></label>
-                                    <input type="radio" id="star4" name="rating" value="4"><label for="star4"></label>
-                                    <input type="radio" id="star5" name="rating" value="5"><label for="star5"></label>
-                                </div>
-                                <div class="mt-2" id="rating-text">Please select a rating</div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="comments" class="form-label">Comments (Optional)</label>
-                            <textarea class="form-control" id="comments" name="comments" rows="3" placeholder="Share your experience or suggestions..."></textarea>
+                            <label for="comments" class="form-label">Comments</label>
+                            <textarea class="form-control" id="comments" name="comments" rows="4" placeholder="Share your experience or suggestions..." required></textarea>
                         </div>
                         
                         <div class="text-center">
@@ -211,32 +179,6 @@ $history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
                     
                     feedbackModal.show();
                 });
-            });
-            
-            // Handle star rating
-            const stars = document.querySelectorAll('.rating-stars input');
-            const ratingText = document.getElementById('rating-text');
-            const ratingTexts = [
-                "Poor",
-                "Fair",
-                "Good",
-                "Very Good",
-                "Excellent"
-            ];
-            
-            stars.forEach((star, index) => {
-                star.addEventListener('change', function() {
-                    ratingText.textContent = ratingTexts[index];
-                });
-            });
-            
-            // Handle form submission
-            document.getElementById('feedbackForm').addEventListener('submit', function(e) {
-                const rating = document.querySelector('input[name="rating"]:checked');
-                if (!rating) {
-                    e.preventDefault();
-                    alert('Please select a rating');
-                }
             });
         });
     </script>

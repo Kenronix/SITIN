@@ -166,4 +166,22 @@ th, td {
     background-color: #e87e0c;
 }
 
-
+.chart-container {
+    width: 48%;
+    margin: 15px 0;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.charts-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+@media (max-width: 768px) {
+    .chart-container {
+        width: 100%;
+    }
+}

@@ -18,14 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         // Validate data
-        if (empty($sit_in_id) || empty($id_number) || empty($lab) || empty($date)) {
+        if (empty($sit_in_id) || empty($id_number) || empty($lab) || empty($date) || empty($comments)) {
             throw new Exception("Missing required fields");
         }
-
         
         // Insert feedback into database
         $stmt = $pdo->prepare("INSERT INTO feedback (sit_in_id, id_number, lab, date, comments) 
-                             VALUES (?, ?, ?, ?, ?, ?)");
+                             VALUES (?, ?, ?, ?, ?)");
         
         $result = $stmt->execute([$sit_in_id, $id_number, $lab, $date, $comments]);
         
