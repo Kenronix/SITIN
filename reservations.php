@@ -40,9 +40,6 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
                 $stmt = $pdo->prepare("UPDATE reservations SET status = 'Approved' WHERE id = ?");
                 $stmt->execute([$reservation_id]);
                 
-                // Reduce student's remaining sessions by 1
-                $stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = ? AND remaining_sessions > 0");
-                $stmt->execute([$reservation['id_number']]);
                 
                 // Create a sit-in record for the approved reservation
                 $stmt = $pdo->prepare("INSERT INTO sit_ins (id_number, lab, purpose, time_in, date) VALUES (?, ?, ?, ?, ?)");
@@ -57,7 +54,7 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
                 // Commit the transaction
                 $pdo->commit();
                 
-                echo json_encode(['success' => true, 'message' => 'Reservation approved successfully. The student has been added to sit-ins and remaining sessions reduced.']);
+                echo json_encode(['success' => true, 'message' => 'Reservation approved successfully.']);
             } catch (Exception $e) {
                 // Roll back the transaction in case of error
                 $pdo->rollBack();
@@ -106,7 +103,91 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link rel="stylesheet" href="admins.css">
+    <style>
+                /* Modal styles */
+        .modal {
+            display: block;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
 
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 50%;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Status styles */
+        .status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-completed {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* Action button styles */
+        .action-btn {
+            margin: 2px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+            font-size: 12px;
+        }
+
+        .view-reservation-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .approve-reservation-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .reject-reservation-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar">
@@ -185,6 +266,144 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
                 </tbody>
             </table>
     </div>
-    
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+            // Handle View Reservation Details
+            const viewButtons = document.querySelectorAll('.view-reservation-btn');
+            viewButtons.forEach(button => {
+                // Only show See Details button for non-pending reservations
+                if (button.closest('tr').querySelector('.status').textContent !== 'Pending') {
+                    button.addEventListener('click', function() {
+                        const reservationId = this.getAttribute('data-id');
+                        viewReservationDetails(reservationId);
+                    });
+                } else {
+                    button.style.display = 'none'; // Hide See Details for pending reservations
+                }
+            });
+
+            // Handle Approve Reservation
+            const approveButtons = document.querySelectorAll('.approve-reservation-btn');
+            approveButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const reservationId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to approve this reservation?')) {
+                        approveReservation(reservationId);
+                    }
+                });
+            });
+
+            // Handle Reject Reservation
+            const rejectButtons = document.querySelectorAll('.reject-reservation-btn');
+            rejectButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const reservationId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to disapprove this reservation?')) {
+                        rejectReservation(reservationId);
+                    }
+                });
+            });
+        });
+
+        // Function to view reservation details
+        function viewReservationDetails(reservationId) {
+            fetch(`reservations.php?action=view&reservation_id=${reservationId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Create a modal to display the reservation details
+                        const modal = document.createElement('div');
+                        modal.className = 'modal';
+                        
+                        const modalContent = document.createElement('div');
+                        modalContent.className = 'modal-content';
+                        
+                        const closeBtn = document.createElement('span');
+                        closeBtn.className = 'close-button';
+                        closeBtn.innerHTML = '&times;';
+                        closeBtn.onclick = function() {
+                            document.body.removeChild(modal);
+                        };
+                        
+                        const reservation = data.reservation;
+                        
+                        modalContent.innerHTML = `
+                            <h2>Reservation Details</h2>
+                            <p><strong>Student ID:</strong> ${reservation.id_number}</p>
+                            <p><strong>Student Name:</strong> ${reservation.student_name}</p>
+                            <p><strong>Course:</strong> ${reservation.course}</p>
+                            <p><strong>Year Level:</strong> ${reservation.year_level}</p>
+                            <p><strong>Email:</strong> ${reservation.email}</p>
+                            <p><strong>Lab:</strong> ${reservation.lab}</p>
+                            <p><strong>Date:</strong> ${formatDate(reservation.date)}</p>
+                            <p><strong>Time:</strong> ${formatTime(reservation.time_in)}</p>
+                            <p><strong>Purpose:</strong> ${reservation.purpose}</p>
+                            <p><strong>Status:</strong> ${reservation.status}</p>
+                        `;
+                        
+                        modalContent.appendChild(closeBtn);
+                        modal.appendChild(modalContent);
+                        document.body.appendChild(modal);
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while fetching reservation details.');
+                });
+        }
+
+        // Function to approve reservation
+        function approveReservation(reservationId) {
+            fetch(`reservations.php?action=approve&reservation_id=${reservationId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Reload the page to show updated status
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while approving the reservation.');
+                });
+        }
+
+        // Function to reject reservation
+        function rejectReservation(reservationId) {
+            fetch(`reservations.php?action=reject&reservation_id=${reservationId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // Reload the page to show updated status
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while rejecting the reservation.');
+                });
+        }
+
+        // Helper function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // Helper function to format time
+        function formatTime(timeString) {
+            const time = new Date(`1970-01-01T${timeString}`);
+            return time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+    </script>
 </body>
 </html>

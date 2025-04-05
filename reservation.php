@@ -90,6 +90,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+
+        if (isset($_POST['id_number'])) {
+            $id_number = $_POST['id_number'];
+            $query = "SELECT * FROM students WHERE id_number = '$id_number'";
+            $result = mysqli_query($conn, $query);
+            
+            if (mysqli_num_rows($result) > 0) {
+                $student = mysqli_fetch_assoc($result);
+                echo "<p>Name: " . $student['name'] . "</p>";
+                echo "<p>ID: " . $student['id_number'] . "</p>";
+                echo "<button class='btn btn-success' onclick='reserveStudent(" . $student['id_number'] . ")'>Reserve</button>";
+            } else {
+                echo "<p>No student found.</p>";
+            }
+        }
 ?>
 
 <!DOCTYPE html>
@@ -99,7 +114,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservation</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .reservation-table th, 
         .reservation-table td {
@@ -250,5 +265,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="alert alert-danger">Student not found. Please try logging in again.</div>
         <?php endif; ?>
     </div>
+
+    <script>
+
+    </script>
 </body>
 </html>
