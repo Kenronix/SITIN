@@ -1,3 +1,6 @@
+<?php include 'sidebar.php'; ?>
+
+<div class="main-content">
 <?php
 session_start();
 require_once 'conn.php';
@@ -113,42 +116,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservation</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .reservation-table th, 
-        .reservation-table td {
-            text-align: center;
-            vertical-align: middle;
-        }
-        .table-responsive {
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-        }
-        .status-pending {
-            background-color: #fff3cd;
-        }
-        .status-approved {
-            background-color: #d4edda;
-        }
-        .status-rejected {
-            background-color: #f8d7da;
-        }
-        .status-completed {
-            background-color: #cce5ff;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="overallstyle.css">
+
 </head>
 <body>
-    <div class="header">
-        <div>
-            <a href="index.php">Home</a>
-            <a href="#">History</a>
-            <a href="reservation.php" class="active">Reservation</a>
-            <a href="profile.php">Profile</a>
-            <a href="logout.php" class="logout-btn">Logout</a>
-        </div>
-    </div>
     <div class="container mt-5">
         <h2 class="mb-4">Make a Reservation</h2>
         <?php if (isset($errors) && !empty($errors)): ?>
@@ -271,3 +243,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </script>
 </body>
 </html>
+</div>

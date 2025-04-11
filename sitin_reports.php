@@ -92,7 +92,9 @@ if (isset($_GET['export'])) {
         
                     // Header
                     doc.setFontSize(14);
-                    doc.text("University of Cebu College of Computer Studies", 300, 40, { align: "center" });
+                    doc.text("University of Cebu", 300, 20, { align: "center" });
+                    doc.setFontSize(14);
+                    doc.text("College of Computer Studies", 300, 40, { align: "center" });
                     doc.setFontSize(12);
                     doc.text("Computer Laboratory Sit-in Monitoring System Report", 300, 60, { align: "center" });
                     doc.setFontSize(10);
@@ -102,9 +104,7 @@ if (isset($_GET['export'])) {
                     const filters = "' . 
                         (!empty($lab_filter) ? "Lab: " . addslashes($lab_filter) . " " : "") . 
                         (!empty($purpose_filter) ? "Purpose: " . addslashes($purpose_filter) : "") . '";
-                    if (filters.trim() !== "") {
-                        doc.text("Filters: " + filters, 40, 110);
-                    }
+
         
                     // Table with Status & Date
                     const headers = [["ID Number", "Student Name", "Lab", "Time In", "Time Out", "Purpose", "Status", "Date"]];
@@ -159,7 +159,7 @@ if (isset($_GET['export'])) {
                     date('h:i A', strtotime($row['time_out'])),
                     $row['purpose'],
                     $row['status'],
-                    $formatted_date
+                    date('F d, Y', strtotime($row['date']))
                 ];
                 fputcsv($output, $formatted_row);
             }

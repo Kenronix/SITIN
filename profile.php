@@ -1,3 +1,6 @@
+<?php include 'sidebar.php'; ?>
+
+<div class="main-content">
 <?php
 session_start();
 require_once 'conn.php';
@@ -136,7 +139,7 @@ $profile_picture_url = $profile_picture ? "uploads/" . $profile_picture : "profi
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="overallstyle.css">
     <style>
         .profile-image {
             position: relative;
@@ -188,59 +191,9 @@ $profile_picture_url = $profile_picture ? "uploads/" . $profile_picture : "profi
             border-radius: 4px;
         }
     </style>
-    <script>
-        function enableEditing() {
-            document.querySelectorAll('.info-grid input').forEach(input => {
-                if (!input.classList.contains('password-input')) {
-                    input.removeAttribute('disabled');
-                }
-            });
-            document.getElementById('save-btn').style.display = 'block';
-            document.getElementById('cancel-btn').style.display = 'block';
-        }
-        
-        function cancelEditing() {
-            document.querySelectorAll('.info-grid input').forEach(input => {
-                if (!input.classList.contains('password-input')) {
-                    input.setAttribute('disabled', true);
-                    input.value = input.defaultValue;
-                }
-            });
-            document.getElementById('save-btn').style.display = 'none';
-            document.getElementById('cancel-btn').style.display = 'none';
-        }
 
-        function enablePasswordFields() {
-            document.querySelectorAll('.password-input').forEach(input => {
-                input.removeAttribute('disabled');
-            });
-            document.getElementById('save-password-btn').style.display = 'block';
-            document.getElementById('cancel-password-btn').style.display = 'block';
-            document.getElementById('change-password-btn').style.display = 'none';
-        }
-
-        function cancelPasswordChange() {
-            document.querySelectorAll('.password-input').forEach(input => {
-                input.setAttribute('disabled', true);
-                input.value = '';
-            });
-            document.getElementById('save-password-btn').style.display = 'none';
-            document.getElementById('cancel-password-btn').style.display = 'none';
-            document.getElementById('change-password-btn').style.display = 'block';
-        }
-    </script>
 </head>
 <body>
-    <div class="header">
-        <div>
-            <a href="index.php">Home</a>
-            <a href="#">History</a>
-            <a href="reservation.php">Reservation</a>
-            <a href="#" class="active">Profile</a>
-            <a href="logout.php" class="logout-btn">Logout</a>
-        </div>
-    </div>
-    
     <div class="container">
         <div class="profile-card">
             <?php if (isset($error_msg) && !empty($error_msg)): ?>
@@ -344,6 +297,47 @@ $profile_picture_url = $profile_picture ? "uploads/" . $profile_picture : "profi
             }
         }
     });
+
+    function enableEditing() {
+            document.querySelectorAll('.info-grid input').forEach(input => {
+                if (!input.classList.contains('password-input')) {
+                    input.removeAttribute('disabled');
+                }
+            });
+            document.getElementById('save-btn').style.display = 'block';
+            document.getElementById('cancel-btn').style.display = 'block';
+        }
+        
+        function cancelEditing() {
+            document.querySelectorAll('.info-grid input').forEach(input => {
+                if (!input.classList.contains('password-input')) {
+                    input.setAttribute('disabled', true);
+                    input.value = input.defaultValue;
+                }
+            });
+            document.getElementById('save-btn').style.display = 'none';
+            document.getElementById('cancel-btn').style.display = 'none';
+        }
+
+        function enablePasswordFields() {
+            document.querySelectorAll('.password-input').forEach(input => {
+                input.removeAttribute('disabled');
+            });
+            document.getElementById('save-password-btn').style.display = 'block';
+            document.getElementById('cancel-password-btn').style.display = 'block';
+            document.getElementById('change-password-btn').style.display = 'none';
+        }
+
+        function cancelPasswordChange() {
+            document.querySelectorAll('.password-input').forEach(input => {
+                input.setAttribute('disabled', true);
+                input.value = '';
+            });
+            document.getElementById('save-password-btn').style.display = 'none';
+            document.getElementById('cancel-password-btn').style.display = 'none';
+            document.getElementById('change-password-btn').style.display = 'block';
+        }
     </script>
 </body>
 </html>
+</div>

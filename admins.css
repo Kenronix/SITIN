@@ -67,7 +67,7 @@ thead {
 th, td {
     padding: 15px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid;
 
 }
 
@@ -105,10 +105,11 @@ th, td {
     padding: 5px 10px;
     margin: 2px;
     font-size: 16px;
+
 }
 
 .view-reservation-btn {
-    color: #007bff;
+    color: #7e0cca;
 }
 
 .approve-reservation-btn {
@@ -166,22 +167,63 @@ th, td {
     background-color: #e87e0c;
 }
 
-.chart-container {
-    width: 48%;
-    margin: 15px 0;
-    padding: 15px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-.charts-row {
+
+/* Bootstrap compatible chart row styling */
+.row {
     display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    margin-top: 30px;
+    flex-wrap: nowrap;
+    margin-right: -15px;
+    margin-left: -15px;
 }
-@media (max-width: 768px) {
-    .chart-container {
-        width: 100%;
-    }
+
+.col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+    position: relative;
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
 }
+
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0;
+    background-color: #4B0082;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.card-header h3 {
+    color: #FFA500;
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.card-body {
+    flex: 1 1 auto;
+    min-height: 1px;
+    padding: 1.25rem;
+}
+
+
+
+
+
+
+
+

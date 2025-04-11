@@ -31,6 +31,26 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .reset-btn:hover {
             background-color: #45a049;
         }
+        .reset-all-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .reset-all-btn:hover {
+            background-color: #e68a00;
+        }
+        .action-bar {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -52,6 +72,9 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
     <div class="content">
         <h3>Student List</h3>
+        <div class="action-bar">
+            <button id="reset-all-sessions" class="reset-all-btn">Reset All Sessions</button>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -74,7 +97,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td><?= htmlspecialchars($user['email']) ?></td>
                         <td><?= htmlspecialchars($user['remaining_sessions']) ?></td>
                         <td>
-                            <button class="reset-btn" data-id="<?= htmlspecialchars($user['id_number']) ?>" data-name="<?= htmlspecialchars($user['name']) ?>">Reset Sessions</button>
+                            <button class="reset-btn" data-id="<?= htmlspecialchars($user['id_number']) ?>" data-name="<?= htmlspecialchars($user['name']) ?>">Reset Session</button>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -127,6 +150,41 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         });
                     }
                 });
+            });
+
+            // Reset All Sessions button functionality
+            document.getElementById('reset-all-sessions').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset sessions for ALL students back to 30? This action cannot be undone.')) {
+                    // Send AJAX request to process the reset for all students
+                    fetch('reset_all_sessions.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        }
+                    })
+                    .then(response => {
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                throw new Error('Server returned invalid JSON: ' + text);
+                            }
+                        });
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert(`All student sessions have been reset to 30 successfully.`);
+                            // Reload the page to update the table
+                            location.reload();
+                        } else {
+                            alert('Error: ' + (data.message || 'Unknown error occurred'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message);
+                    });
+                }
             });
         });
     </script>

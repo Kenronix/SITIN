@@ -1,3 +1,6 @@
+<?php include 'sidebar.php'; ?>
+
+<div class="main-content">
 <?php
 session_start();
 
@@ -23,6 +26,7 @@ $history_stmt = $pdo->prepare("SELECT s.*,
 $history_stmt->execute([$id_number]);
 $history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
 ?>
 
 <!DOCTYPE html>
@@ -31,53 +35,15 @@ $history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sit-In History</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="overallstyle.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .history-table th, .history-table td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        .history-table th {
-            background-color: #f2f2f2;
-        }
-        .status-completed {
-            color: green;
-            font-weight: bold;
-        }
-        .status-active {
-            color: blue;
-            font-weight: bold;
-        }
-    </style>
+
 </head>
 <body>
-    <div class="header">
-        <div>
-            <a href="index.php">Home</a>
-            <a href="history.php" class="active">History</a>
-            <a href="reservation.php">Reservation</a>
-            <a href="profile.php">Profile</a>
-            <a href="logout.php" class="logout-btn">Logout</a>
-        </div>
-    </div>
-
     <div class="container">
         <h2>My Sit-In History</h2>
+
         
         <?php if (empty($history)): ?>
             <div class="alert alert-info">You have no sit-in history yet.</div>
@@ -184,3 +150,4 @@ $history = $history_stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
 </body>
 </html>
+</div>

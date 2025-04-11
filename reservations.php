@@ -101,10 +101,10 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Reservations</title>
     <link rel="stylesheet" href="admins.css">
     <style>
-                /* Modal styles */
+        /* Modal styles */
         .modal {
             display: block;
             position: fixed;
@@ -174,7 +174,7 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
         }
 
         .view-reservation-btn {
-            background-color: #17a2b8;
+            background-color: #FFA500;
             color: white;
         }
 
