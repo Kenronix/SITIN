@@ -13,8 +13,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <li><a href="profile.php" <?php echo ($current_page == 'profile.php') ? 'class="active"' : ''; ?>>Profile</a></li>
         <li><a href="reservation.php" <?php echo ($current_page == 'reservation.php') ? 'class="active"' : ''; ?>>Reservation</a></li>
         <li><a href="history.php" <?php echo ($current_page == 'history.php') ? 'class="active"' : ''; ?>>History</a></li>
-        <li><a href="labresources.php" <?php echo ($current_page == 'labresources.php') ? 'class="active"' : ''; ?>>Lab Resources</a></li>
-
         <li><a href="logout.php">Logout</a></li>
     </ul>
 </div>

@@ -21,6 +21,15 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Current Sit-In</title>
     <link rel="stylesheet" href="admins.css">
+    <style>
+        .action-btn {
+            margin-right: 5px;
+        }
+        .reward-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="sidebar">
@@ -33,7 +42,7 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
             <li><a href="students.php">Students</a></li>
             <li><a href="announcement.php">Announcement</a></li>
             <li><a href="feedback.php">Feedback</a></li>
-            <li><a href="survey.php">Satisfaction Survey</a></li>
+            <li><a href="labsched.php">Lab Schedule</a></li>
             <li><a href="resources.php">Lab Resources</a></li>
             <li><a href="leaderboard.php">Leaderboard</a></li>
             <li><a href="logout.php">Logout</a></li>
@@ -65,6 +74,7 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
                             <td><?= htmlspecialchars($sitin['purpose']) ?></td>
                             <td><span class="status status-active">Active</span></td>
                             <td>
+                                <button class="action-btn reward-btn" data-id="<?= $sitin['id'] ?>" data-student-id="<?= $sitin['id_number'] ?>">REWARD</button>
                                 <button class="action-btn reject-btn" data-id="<?= $sitin['id'] ?>"><i class="fas fa-sign-out-alt"></i> Logout</button>
                             </td>
                         </tr>
@@ -111,6 +121,41 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
                         .catch(error => {
                             console.error('Error:', error);
                             alert('An error occurred while processing the logout.');
+                        });
+                    }
+                });
+            });
+
+            // Add event listeners to all reward buttons
+            const rewardButtons = document.querySelectorAll('.reward-btn');
+            
+            rewardButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const studentId = this.getAttribute('data-student-id');
+                    const sitInId = this.getAttribute('data-id');
+                    
+                    if (confirm('Are you sure you want to give a reward point to this student? This will also log them out and reduce their remaining session count by 1.')) {
+                        // Send AJAX request to process the reward
+                        fetch('process_reward.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'student_id=' + studentId + '&sit_in_id=' + sitInId
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                // Reload the page to update the table since the student was logged out
+                                location.reload();
+                            } else {
+                                alert('Error: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while processing the reward.');
                         });
                     }
                 });

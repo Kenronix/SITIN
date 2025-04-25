@@ -200,7 +200,7 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
             <li><a href="students.php">Students</a></li>
             <li><a href="announcement.php">Announcement</a></li>
             <li><a href="feedback.php">Feedback</a></li>
-            <li><a href="survey.php">Satisfaction Survey</a></li>
+            <li><a href="labsched.php">Lab Schedule</a></li>
             <li><a href="resources.php">Lab Resources</a></li>
             <li><a href="leaderboard.php">Leaderboard</a></li>
             <li><a href="logout.php">Logout</a></li>
