@@ -2,6 +2,7 @@
 session_start();
 include 'conn.php'; // Database connection
 
+
 $stmt = $pdo->query("SELECT id_number, CONCAT(firstname, ' ', lastname) AS name, course, year_level, email, remaining_sessions FROM users WHERE role = 'student' ORDER BY name ASC");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -22,75 +23,58 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
         exit;
     }
     
-    switch ($action) {
-        case 'approve':
-            // Start a transaction
-            $pdo->beginTransaction();
-            try {
-                // Get reservation details
-                $stmt = $pdo->prepare("SELECT id_number, lab, time_in, date, purpose FROM reservations WHERE id = ?");
-                $stmt->execute([$reservation_id]);
-                $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$reservation) {
-                    throw new Exception("Reservation not found");
-                }
-                
-                // Update the reservation status to Approved
-                $stmt = $pdo->prepare("UPDATE reservations SET status = 'Approved' WHERE id = ?");
-                $stmt->execute([$reservation_id]);
-                
-                
-                // Create a sit-in record for the approved reservation
-                $stmt = $pdo->prepare("INSERT INTO sit_ins (id_number, lab, purpose, time_in, date) VALUES (?, ?, ?, ?, ?)");
-                $stmt->execute([
-                    $reservation['id_number'], 
-                    $reservation['lab'], 
-                    $reservation['purpose'],
-                    $reservation['time_in'],
-                    $reservation['date']
-                ]);
-                
-                // Commit the transaction
-                $pdo->commit();
-                
-                echo json_encode(['success' => true, 'message' => 'Reservation approved successfully.']);
-            } catch (Exception $e) {
-                // Roll back the transaction in case of error
-                $pdo->rollBack();
-                echo json_encode(['success' => false, 'message' => 'Failed to approve reservation: ' . $e->getMessage()]);
-            }
-            break;
-            
-        case 'reject':
-            // Update the reservation status to Rejected
-            $stmt = $pdo->prepare("UPDATE reservations SET status = 'Rejected' WHERE id = ?");
-            if ($stmt->execute([$reservation_id])) {
-                echo json_encode(['success' => true, 'message' => 'Reservation rejected successfully']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to reject reservation']);
-            }
-            break;
-            
-        case 'view':
-            // Get reservation details
-            $stmt = $pdo->prepare("SELECT r.*, CONCAT(u.firstname, ' ', u.lastname) AS student_name, 
-                                 u.course, u.year_level, u.email
-                                 FROM reservations r
-                                 JOIN users u ON r.id_number = u.id_number
-                                 WHERE r.id = ?");
-            $stmt->execute([$reservation_id]);
-            $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($reservation) {
-                echo json_encode(['success' => true, 'reservation' => $reservation]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Reservation not found']);
-            }
-            break;
-            
-        default:
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+    try {
+        $pdo->beginTransaction();
+        
+        // Get reservation details
+        $stmt = $pdo->prepare("SELECT r.*, u.id_number FROM reservations r 
+                              JOIN users u ON r.id_number = u.id_number 
+                              WHERE r.id = ?");
+        $stmt->execute([$reservation_id]);
+        $reservation = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$reservation) {
+            throw new Exception('Reservation not found');
+        }
+        
+        if ($action === 'approve') {
+            // Update reservation status
+            $update_stmt = $pdo->prepare("UPDATE reservations SET status = 'Approved' WHERE id = ?");
+            $update_stmt->execute([$reservation_id]);
+
+            // Combine date and time for sit_in
+            $datetime_in = $reservation['date'] . ' ' . $reservation['time_in'];
+
+            // Extract date part for separate storage
+            $date_part = $reservation['date'];
+            $time_part = $reservation['time_in'];
+            $datetime_in = $date_part . ' ' . $time_part;
+
+            // Insert into sit_ins table with explicit date column
+            $insert_sitin_stmt = $pdo->prepare("INSERT INTO sit_ins (id_number, lab, purpose, time_in, date) VALUES (?, ?, ?, ?, ?)");
+            $insert_sitin_stmt->execute([
+                $reservation['id_number'],
+                $reservation['lab'],
+                $reservation['purpose'],
+                $datetime_in,
+                $date_part
+            ]);
+
+            $message = 'Reservation approved successfully and moved to Current Sit-In';
+        } elseif ($action === 'disapprove') {
+            // Update reservation status
+            $update_stmt = $pdo->prepare("UPDATE reservations SET status = 'Disapproved' WHERE id = ?");
+            $update_stmt->execute([$reservation_id]);
+            $message = 'Reservation disapproved successfully';
+        } else {
+            throw new Exception('Invalid action');
+        }
+        
+        $pdo->commit();
+        echo json_encode(['success' => true, 'message' => $message]);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
 }
@@ -394,9 +378,11 @@ if (isset($_GET['action']) && isset($_GET['reservation_id'])) {
 
         // Helper function to format date
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
+            const parts = dateString.split('-');
+            if (parts.length !== 3) return dateString;
+            const [year, month, day] = parts;
+            const date = new Date(`${year}-${month}-${day}T00:00:00`);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
         // Helper function to format time

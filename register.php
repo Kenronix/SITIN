@@ -66,33 +66,193 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
     <title>Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #regscontainer {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .regscontainer {
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input:focus, select:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        input::placeholder {
+            color: #a0a0a0;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 15px;
+            padding-right: 40px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #5a6fd6;
+            transform: translateY(-1px);
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .error p {
+            margin: 5px 0;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .form-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a0a0a0;
+        }
+
+        .form-group input {
+            padding-left: 45px;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            #regscontainer {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            input, select, button {
+                padding: 10px 12px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="regscontainer">
         <form method="POST" action="register.php">
-            <h1>REGISTRATION</h1>
+            <h1>Create Account</h1>
             <?php if (!empty($errors)): ?>
                 <div class="error">
                     <?php foreach($errors as $error): ?>
-                        <p><?php echo $error; ?></p>
+                        <p><i class="fas fa-exclamation-circle"></i> <?php echo $error; ?></p>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
-            <div class="regscontainer">
-                <input type="text" name="idno" id="idno" placeholder="IDNO" value="<?php echo isset($_POST['idno']) ? htmlspecialchars($_POST['idno']) : ''; ?>"><br>
+            
+            <div class="form-group">
+                <i class="fas fa-id-card"></i>
+                <input type="text" name="idno" id="idno" placeholder="ID Number" value="<?php echo isset($_POST['idno']) ? htmlspecialchars($_POST['idno']) : ''; ?>" required>
             </div>
-            <div class="regscontainer">
-                <input type="text" name="lname" id="lname" placeholder="LASTNAME" value="<?php echo isset($_POST['lname']) ? htmlspecialchars($_POST['lname']) : ''; ?>"><br>
+
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="lname" id="lname" placeholder="Last Name" value="<?php echo isset($_POST['lname']) ? htmlspecialchars($_POST['lname']) : ''; ?>" required>
             </div>
-            <div class="regscontainer">
-                <input type="text" name="fname" id="fname" placeholder="FIRSTNAME" value="<?php echo isset($_POST['fname']) ? htmlspecialchars($_POST['fname']) : ''; ?>"><br>
+
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="fname" id="fname" placeholder="First Name" value="<?php echo isset($_POST['fname']) ? htmlspecialchars($_POST['fname']) : ''; ?>" required>
             </div>
-            <div class="regscontainer">
-                <input type="text" name="mname" id="mname" placeholder="MIDDLENAME" value="<?php echo isset($_POST['mname']) ? htmlspecialchars($_POST['mname']) : ''; ?>"><br>
+
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="mname" id="mname" placeholder="Middle Name" value="<?php echo isset($_POST['mname']) ? htmlspecialchars($_POST['mname']) : ''; ?>">
             </div>
-            <div class="regscontainer">
+
+            <div class="form-group">
+                <i class="fas fa-graduation-cap"></i>
                 <select id="course" name="course" required>
                     <option value="">Select Course</option>
                     <option value="BSCS" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BSCS') ? 'selected' : ''; ?>>Bachelor of Science in Computer Science</option>
@@ -101,7 +261,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="BSECE" <?php echo (isset($_POST['course']) && $_POST['course'] == 'BSECE') ? 'selected' : ''; ?>>Bachelor of Science in Electronics Engineering</option>
                 </select>
             </div>
-            <div class="regscontainer">
+
+            <div class="form-group">
+                <i class="fas fa-calendar"></i>
                 <select id="year" name="year" required>
                     <option value="">Select Year Level</option>
                     <?php for($i = 1; $i <= 4; $i++): ?>
@@ -109,17 +271,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <?php endfor; ?>
                 </select>
             </div>
-            <div class="regscontainer">
-                <input type="email" name="address" id="address" placeholder="EMAIL ADDRESS" value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>"><br>
+
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" name="address" id="address" placeholder="Email Address" value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>" required>
             </div>
-            <div class="regscontainer">
-                <input type="text" name="uname" id="uname" placeholder="USERNAME" value="<?php echo isset($_POST['uname']) ? htmlspecialchars($_POST['uname']) : ''; ?>"><br>
+
+            <div class="form-group">
+                <i class="fas fa-user-circle"></i>
+                <input type="text" name="uname" id="uname" placeholder="Username" value="<?php echo isset($_POST['uname']) ? htmlspecialchars($_POST['uname']) : ''; ?>" required>
             </div>
-            <div class="regscontainer">
-                <input type="password" name="pass" id="pass" placeholder="PASSWORD"><br>
+
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="pass" id="pass" placeholder="Password" required>
             </div>
-            <div>
-                <button type="submit" id="submit">Sign Up</button>    
+
+            <button type="submit">
+                <i class="fas fa-user-plus"></i> Sign Up
+            </button>
+
+            <div class="login-link">
+                Already have an account? <a href="login.php">Login here</a>
             </div>
         </form>
     </div>

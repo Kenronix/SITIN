@@ -46,10 +46,10 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php 
                 // Get feedback from database - sorting by the full timestamp
                 $feedback_stmt = $pdo->query("SELECT f.id, f.id_number, CONCAT(u.firstname, ' ', u.lastname) AS student_name, 
-                                            f.lab, f.date, f.comments, f.created_at
+                                            f.lab, f.date, f.comments
                                             FROM feedback f
                                             JOIN users u ON f.id_number = u.id_number
-                                            ORDER BY f.created_at DESC");
+                                            ORDER BY f.date DESC");
                 $feedbacks = $feedback_stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 if (!empty($feedbacks)): 

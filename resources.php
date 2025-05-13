@@ -74,6 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_resource'])) {
             $file['size']
         ]);
         
+        $resource_id = $pdo->lastInsertId();
+        
         $success_message = "Resource uploaded successfully!";
     } catch (Exception $e) {
         $error_message = $e->getMessage();

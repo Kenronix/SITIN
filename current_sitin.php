@@ -6,7 +6,7 @@ $stmt = $pdo->query("SELECT id_number, CONCAT(firstname, ' ', lastname) AS name,
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $current_sitin_stmt = $pdo->query("SELECT s.id, s.id_number, CONCAT(u.firstname, ' ', u.lastname) AS student_name, 
-                                s.lab, s.time_in, s.purpose 
+                                s.lab, s.time_in, s.purpose,s.date
                                 FROM sit_ins s 
                                 JOIN users u ON s.id_number = u.id_number 
                                 WHERE s.time_out IS NULL 
@@ -59,6 +59,7 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Lab</th>
                     <th>Time In</th>
                     <th>Purpose</th>
+                    <th>Date</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -67,11 +68,21 @@ $current_sitins = $current_sitin_stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php if (!empty($current_sitins)): ?>
                     <?php foreach ($current_sitins as $sitin): ?>
                         <tr>
-                            <td><?= htmlspecialchars($sitin['id_number']) ?></td>
+                            <td><?= htmlspecialchars($sitin['id_number']) ?></td>   
                             <td><?= htmlspecialchars($sitin['student_name']) ?></td>
                             <td><?= htmlspecialchars($sitin['lab']) ?></td>
                             <td><?= htmlspecialchars(date('h:i A', strtotime($sitin['time_in']))) ?></td>
                             <td><?= htmlspecialchars($sitin['purpose']) ?></td>
+                            <td>   
+                                <?php 
+                                    if (!empty($sitin['date']) && $sitin['date'] !== '0000-00-00' && strtotime($sitin['date']) !== false) {
+                                        echo htmlspecialchars(date('F d, Y', strtotime($sitin['date'])));
+                                    } else {
+                                        // Extract date from time_in if date is missing
+                                        echo htmlspecialchars(date('F d, Y', strtotime($sitin['time_in'])));
+                                    }
+                                ?>
+                            </td>
                             <td><span class="status status-active">Active</span></td>
                             <td>
                                 <button class="action-btn reward-btn" data-id="<?= $sitin['id'] ?>" data-student-id="<?= $sitin['id_number'] ?>">REWARD</button>

@@ -21,9 +21,10 @@ try {
         exit;
     }
     
-    // Update the sit-in record with logout time (no status field)
-    $update_stmt = $pdo->prepare("UPDATE sit_ins SET time_out = NOW() WHERE id = ?");
-    $update_stmt->execute([$_POST['sit_in_id']]);
+    // Update the sit-in record with logout time
+    $current_time = date('H:i:s');
+    $update_stmt = $pdo->prepare("UPDATE sit_ins SET time_out = ? WHERE id = ?");
+    $update_stmt->execute([$current_time, $_POST['sit_in_id']]);
     
     // Reduce the remaining sessions by 1
     $reduce_stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = ? AND remaining_sessions > 0");

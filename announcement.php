@@ -39,7 +39,6 @@ if(isset($_POST['publish'])) {
     try {
         $stmt = $pdo->prepare("INSERT INTO announcements (title, content, image, date_published) VALUES (?, ?, ?, NOW())");
         $stmt->execute([$title, $content, $imagePath]);
-
         header("Location: announcement.php?success=1");
         exit();
     } catch (PDOException $e) {

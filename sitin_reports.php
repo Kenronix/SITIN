@@ -33,10 +33,10 @@ if (!empty($purpose_filter)) {
 $query .= " ORDER BY s.time_in DESC";
 
 // Get distinct labs and purposes for filter dropdowns
-$labs_stmt = $pdo->query("SELECT DISTINCT lab FROM sit_in_sessions ORDER BY lab");
+$labs_stmt = $pdo->query("SELECT DISTINCT lab FROM sit_ins ORDER BY lab");
 $labs = $labs_stmt->fetchAll(PDO::FETCH_COLUMN);
 
-$purposes_stmt = $pdo->query("SELECT DISTINCT purpose FROM sit_in_sessions ORDER BY purpose");
+$purposes_stmt = $pdo->query("SELECT DISTINCT purpose FROM sit_ins ORDER BY purpose");
 $purposes = $purposes_stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // Execute the filtered query
@@ -539,7 +539,7 @@ if (isset($_GET['export'])) {
                             <td><?= htmlspecialchars(date('h:i A', strtotime($report['time_out']))) ?></td>
                             <td><?= htmlspecialchars($report['purpose']) ?></td>
                             <td><span class="status status-completed"><?= htmlspecialchars($report['status']) ?></span></td>
-                            <td><?= htmlspecialchars($report['date']) ?></td>
+                            <td><?= htmlspecialchars(date('F d, Y', strtotime($report['date']))) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>

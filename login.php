@@ -4,35 +4,42 @@ require_once 'conn.php'; // Ensure this connects to the 'admin_user' database
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
-    $password = $_POST['password'];
+    $password = trim($_POST['password']);
 
     if (empty($username) || empty($password)) {
         $error = "Please fill in all fields";
     } else {
-        // Select user from the admin_user database
-        $sql = "SELECT * FROM users WHERE username = :username";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['username' => $username]);
-        $user = $stmt->fetch();
+        try {
+            // Select user from the database
+            $sql = "SELECT * FROM users WHERE username = :username";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['username' => $username]);
+            $user = $stmt->fetch();
 
-        if ($user) {
-            if ($password === $user['password']) { // Plain text password check
-                $_SESSION['user_id'] = $user['id'];
+            if ($user && $password === $user['password']) {
+                // Set session variables
+                $_SESSION['user_id'] = $user['id_number'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
+                $_SESSION['id_number'] = $user['id_number'];
 
+                // Debug information
+                error_log("Login attempt - Username: " . $username . ", Role: " . $user['role']);
+
+                // Redirect based on role
                 if ($user['role'] === 'admin') {
-                    header("Location: admin_dashboard.php"); // Redirect admin users
-                    exit();
+                    header("Location: admin_dashboard.php");
+                } else if ($user['role'] === 'student') {
+                    header("Location: index.php");
                 } else {
-                    header("Location: index.php"); // Redirect student users
-                    exit();
+                    $error = "Invalid user role";
                 }
+                exit();
             } else {
                 $error = "Invalid username or password";
             }
-        } else {
-            $error = "Invalid username or password";
+        } catch(PDOException $e) {
+            $error = "Database error: " . $e->getMessage();
         }
     }
 }
