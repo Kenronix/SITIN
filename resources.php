@@ -154,361 +154,242 @@ function getFileIcon($fileType) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Resources</title>
-    <link rel="stylesheet" href="admins.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        .resources-container {
-            margin-top: 20px;
-        }
-        
-        .upload-form {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
-        .resource-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .resource-table th, .resource-table td {
-            border: 1px solid #ddd;
-            padding: 12px 8px;
-            text-align: left;
-        }
-        
-        .resource-table th {
-            background-color: #343a40;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .resource-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .resource-table tr:hover {
-            background-color: #e9ecef;
-        }
-        
-        .btn {
-            display: inline-block;
-            font-weight: 400;
-            text-align: center;
-            white-space: nowrap;
-            vertical-align: middle;
-            user-select: none;
-            border: 1px solid transparent;
-            padding: 0.375rem 0.75rem;
-            font-size: 1rem;
-            line-height: 1.5;
-            border-radius: 0.25rem;
-            transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            cursor: pointer;
-        }
-        
-        .btn-primary {
-            color: #fff;
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        
-        .btn-primary:hover {
-            background-color: #0069d9;
-            border-color: #0062cc;
-        }
-        
-        .btn-danger {
-            color: #fff;
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c82333;
-            border-color: #bd2130;
-        }
-        
-        .btn-success {
-            color: #fff;
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        
-        .btn-success:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        
-        .file-icon {
-            font-size: 1.5rem;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        
-        .section-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .section-heading h3 {
-            margin: 0;
-            font-size: 22px;
-            color: #333;
-        }
-        
-        .resource-info {
-            display: flex;
-            align-items: center;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        
-        .empty-state i {
-            font-size: 48px;
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
-        
-        .empty-state h3 {
-            margin-bottom: 10px;
-            color: #343a40;
-        }
-        
-        .empty-state p {
-            color: #6c757d;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        .file-type-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 10px;
-        }
-        
-        /* File type colors */
-        .file-type-pdf { background-color: #f40f02; color: white; }
-        .file-type-doc, .file-type-docx { background-color: #2b579a; color: white; }
-        .file-type-xls, .file-type-xlsx { background-color: #217346; color: white; }
-        .file-type-ppt, .file-type-pptx { background-color: #d24726; color: white; }
-        .file-type-txt { background-color: #5c5c5c; color: white; }
-        .file-type-zip, .file-type-rar { background-color: #ffc107; color: #212529; }
-        .file-type-jpg, .file-type-jpeg, .file-type-png { background-color: #6610f2; color: white; }
-        
-        .actions-column {
-            white-space: nowrap;
-            width: 150px;
-        }
-        
-        @media (max-width: 768px) {
-            .resource-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-    </style>
+    <title>Lab Resources | Admin Panel</title>
+    <link rel="stylesheet" href="admin_style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="sidebar">
-        <h2>Admin Panel</h2>
+        <h2><i class="fas fa-laptop-code"></i> Admin Panel</h2>
         <ul>
-            <li><a href="admin_dashboard.php">Dashboard</a></li>
-            <li><a href="reservations.php">Pending Reservation</a></li>
-            <li><a href="current_sitin.php">Current Sit-In</a></li>
-            <li><a href="sitin_reports.php">Sit-In Reports</a></li>
-            <li><a href="students.php">Students</a></li>
-            <li><a href="announcement.php">Announcement</a></li>
-            <li><a href="feedback.php">Feedback</a></li>
-            <li><a href="labsched.php">Lab Schedule</a></li>
-            <li><a href="resources.php">Lab Resources</a></li>
-            <li><a href="leaderboard.php">Leaderboard</a></li>
-            <li><a href="logout.php">Logout</a></li>
+            <li><a href="admin_dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="reservations.php"><i class="fas fa-calendar-check"></i> Pending Reservation</a></li>
+            <li><a href="current_sitin.php"><i class="fas fa-users"></i> Current Sit-In</a></li>
+            <li><a href="sitin_reports.php"><i class="fas fa-file-alt"></i> Sit-In Reports</a></li>
+            <li><a href="students.php"><i class="fas fa-user-graduate"></i> Students</a></li>
+            <li><a href="announcement.php"><i class="fas fa-bullhorn"></i> Announcement</a></li>
+            <li><a href="feedback.php"><i class="fas fa-comment-alt"></i> Feedback</a></li>
+            <li><a href="labsched.php"><i class="fas fa-clock"></i> Lab Schedule</a></li>
+            <li><a href="resources.php" class="active"><i class="fas fa-book"></i> Lab Resources</a></li>
+            <li><a href="leaderboard.php"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+            <li><a href="pc_management.php"><i class="fas fa-desktop"></i> PC Management</a></li>
+            <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
-    
+
     <div class="content">
-        <h2>Lab Resources Management</h2>
-        
+        <div class="content-header">
+            <h1><i class="fas fa-book"></i> Lab Resources Management</h1>
+        </div>
+
         <?php if (isset($success_message)): ?>
-            <div class="alert alert-success"><?php echo $success_message; ?></div>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <?php echo $success_message; ?>
+            </div>
         <?php endif; ?>
         
         <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger"><?php echo $error_message; ?></div>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <?php echo $error_message; ?>
+            </div>
         <?php endif; ?>
-        
-        <div class="section-heading">
-            <h3>Upload New Resource</h3>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-upload"></i> Upload New Resource</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="resources.php" enctype="multipart/form-data" class="upload-form">
+                    <div class="form-group">
+                        <label for="resource_name" class="form-label">Resource Name</label>
+                        <input type="text" id="resource_name" name="resource_name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resource_file" class="form-label">Select File</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="resource_file" name="resource_file" class="form-control" required>
+                            <small class="form-text text-muted">Maximum file size: 10MB. Allowed types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, JPEG, PNG, ZIP, RAR</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" name="upload_resource" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Upload Resource
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        
-        <div class="upload-form">
-            <form method="POST" action="resources.php" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="resource_name">Resource Name:</label>
-                    <input type="text" id="resource_name" name="resource_name" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="resource_file">Select File:</label>
-                    <input type="file" id="resource_file" name="resource_file" class="form-control" required>
-                    <small style="display: block; margin-top: 5px; color: #6c757d;">
-                        Allowed file types: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, JPG, JPEG, PNG, ZIP, RAR (Max size: 10MB)
-                    </small>
-                </div>
-                
-                <button type="submit" name="upload_resource" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Upload Resource
-                </button>
-            </form>
-        </div>
-        
-        <div class="section-heading">
-            <h3>Available Resources</h3>
-        </div>
-        
-        <div class="resources-container">
-            <?php if (count($resources) > 0): ?>
-                <table class="resource-table">
-                    <thead>
-                        <tr>
-                            <th>Resource Name</th>
-                            <th>File</th>
-                            <th>Size</th>
-                            <th>Uploaded On</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($resources as $resource): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($resource['resource_name']); ?></td>
-                                <td>
-                                    <div class="resource-info">
-                                        <i class="fas <?php echo getFileIcon($resource['file_type']); ?> file-icon"></i>
-                                        <?php echo htmlspecialchars($resource['file_name']); ?>
-                                        <span class="file-type-badge file-type-<?php echo $resource['file_type']; ?>">
-                                            <?php echo strtoupper($resource['file_type']); ?>
-                                        </span>
-                                    </div>
-                                </td>
-                                <td><?php echo formatFileSize($resource['file_size']); ?></td>
-                                <td><?php echo date('M d, Y g:i A', strtotime($resource['upload_date'])); ?></td>
-                                <td class="actions-column">
-                                    <a href="<?php echo $resource['file_path']; ?>" class="btn btn-success" download>
-                                        <i class="fas fa-download"></i> Download
-                                    </a>
-                                    <a href="resources.php?delete=<?php echo $resource['id']; ?>" class="btn btn-danger" 
-                                       onclick="return confirm('Are you sure you want to delete this resource?')">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div class="empty-state">
-                    <i class="fas fa-folder-open"></i>
-                    <h3>No Resources Available</h3>
-                    <p>There are no resources uploaded yet. Use the form above to upload your first resource.</p>
-                </div>
-            <?php endif; ?>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-list"></i> Available Resources</h3>
+            </div>
+            <div class="card-body">
+                <?php if (empty($resources)): ?>
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open fa-3x"></i>
+                        <h3>No Resources Found</h3>
+                        <p>Upload your first resource to get started.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Resource Name</th>
+                                    <th>File Type</th>
+                                    <th>Size</th>
+                                    <th>Upload Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($resources as $resource): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="resource-info">
+                                                <i class="fas <?php echo getFileIcon($resource['file_type']); ?>"></i>
+                                                <span><?php echo htmlspecialchars($resource['resource_name']); ?></span>
+                                            </div>
+                                        </td>
+                                        <td><?php echo strtoupper($resource['file_type']); ?></td>
+                                        <td><?php echo formatFileSize($resource['file_size']); ?></td>
+                                        <td><?php echo date('M d, Y', strtotime($resource['upload_date'])); ?></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="download.php?id=<?php echo $resource['id']; ?>" class="btn btn-sm btn-info" title="Download">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                                <a href="resources.php?delete=<?php echo $resource['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this resource?')" title="Delete">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-    
-    <script>
-        // Client-side validation
-        document.addEventListener('DOMContentLoaded', function() {
-            const uploadForm = document.querySelector('form');
-            const fileInput = document.getElementById('resource_file');
-            
-            uploadForm.addEventListener('submit', function(e) {
-                // Check if file is selected
-                if (fileInput.files.length === 0) {
-                    e.preventDefault();
-                    alert('Please select a file to upload');
-                    return;
-                }
-                
-                const file = fileInput.files[0];
-                
-                // Validate file size (10MB max)
-                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-                if (file.size > maxSize) {
-                    e.preventDefault();
-                    alert('File is too large. Maximum size is 10MB.');
-                    return;
-                }
-                
-                // Validate file extension
-                const fileName = file.name;
-                const fileExt = fileName.split('.').pop().toLowerCase();
-                const allowedExts = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'zip', 'rar'];
-                
-                if (!allowedExts.includes(fileExt)) {
-                    e.preventDefault();
-                    alert('Invalid file type. Allowed types: ' + allowedExts.join(', '));
-                    return;
-                }
-            });
-        });
-    </script>
+
+    <style>
+    /* Upload Form Styles */
+    .upload-form {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .file-upload-wrapper {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .file-upload-wrapper input[type="file"] {
+        padding: 0.5rem;
+        border: 2px dashed var(--border-color);
+        border-radius: 0.5rem;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .file-upload-wrapper input[type="file"]:hover {
+        border-color: var(--primary-color);
+    }
+
+    .form-text {
+        display: block;
+        margin-top: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    /* Resource Table Styles */
+    .resource-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .resource-info i {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-sm:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .btn-info {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-info:hover {
+        background-color: var(--primary-dark);
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background-color: var(--danger-dark);
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        margin-bottom: 1rem;
+        color: var(--border-color);
+    }
+
+    .empty-state h3 {
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .upload-form {
+            max-width: 100%;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+    </style>
 </body>
 </html>

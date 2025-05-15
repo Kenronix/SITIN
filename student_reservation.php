@@ -95,41 +95,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($errors)) {
-            // Check for existing reservations for the same lab, date, time
-            $check_sql = "SELECT COUNT(*) FROM reservations WHERE lab = :lab AND date = :date AND time_in = :time_in";
+            // Check for existing reservations for the same lab, date, time and pc_number
+            $check_sql = "SELECT COUNT(*) FROM reservations WHERE lab = :lab AND date = :date AND time_in = :time_in AND pc_number = :pc_number";
             $check_stmt = $pdo->prepare($check_sql);
+            $pc_number = $_POST['pc_number'] ?? null;
             $check_stmt->execute([
                 'lab' => $lab,
                 'date' => $date,
-                'time_in' => $time_in
+                'time_in' => $time_in,
+                'pc_number' => $pc_number
             ]);
-
             $existing_count = $check_stmt->fetchColumn();
-
             if ($existing_count > 0) {
-                $errors[] = "This lab is already reserved for the selected time slot.";
+                $errors[] = "This PC is already reserved for the selected time slot.";
             } else {
-                // Prepare SQL statement using PDO with status field
-                $sql = "INSERT INTO reservations (id_number, lab, purpose, status, time_in, date, remaining_session) 
-                        VALUES (:id_number, :lab, :purpose, :status, :time_in, :date, :remaining_session)";
-
+                // Prepare SQL statement using PDO with status field and pc_number
+                $sql = "INSERT INTO reservations (id_number, lab, pc_number, purpose, status, time_in, date, remaining_session) 
+                        VALUES (:id_number, :lab, :pc_number, :purpose, :status, :time_in, :date, :remaining_session)";
                 $stmt = $pdo->prepare($sql);
-
                 $params = [
                     'id_number' => $id_number,
                     'lab' => $lab,
+                    'pc_number' => $pc_number,
                     'purpose' => $purpose,
                     'status' => $status,
                     'time_in' => $time_in,
                     'date' => $date,
                     'remaining_session' => $remaining_session
                 ];
-
                 if ($stmt->execute($params)) {
                     $reservation_stmt->execute(['id_number' => $student_data['id_number']]);
                     $reservations = $reservation_stmt->fetchAll(PDO::FETCH_ASSOC);
-
                     echo "<script>alert('Reservation successfully created!');</script>";
+
+                    // Add notification for admin
+                    $notif_stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, type, created_at, is_read) VALUES (?, ?, ?, NOW(), 0)");
+                    $notif_stmt->execute([
+                        '000', // or your actual admin id_number
+                        'A new reservation has been made by ' . $student_data['firstname'] . ' ' . $student_data['lastname'] . ' (ID: ' . $student_data['id_number'] . ').',
+                        'student_reservation'
+                    ]);
                 } else {
                     $errors[] = "Failed to create reservation";
                 }
@@ -147,7 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>Reservation</title>
     <link rel="stylesheet" href="modern-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container mt-5">
@@ -195,6 +200,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </select>
             </div>
 
+            <div class="mb-3" id="pc-select-group" style="display:none">
+                <label for="pc_number" class="form-label">PC Number:</label>
+                <select class="form-control" id="pc_number" name="pc_number" required></select>
+            </div>
+
             <div class="mb-3">
                 <label for="purpose" class="form-label">Purpose:</label>
                 <select class="form-control" id="purpose" name="purpose" required>
@@ -238,6 +248,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <th>Date</th>
                             <th>Time</th>
                             <th>Lab</th>
+                            <th>PC</th>
                             <th>Purpose</th>
                             <th>Status</th>
                         </tr>
@@ -284,6 +295,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($reservation['lab']); ?></td>
+                                <td><?php echo htmlspecialchars($reservation['pc_number'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($reservation['purpose']); ?></td>
                                 <td class="<?php echo $statusClass; ?>">
                                     <?php echo htmlspecialchars($status); ?>
@@ -301,6 +313,53 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="alert alert-danger">Student not found. Please try logging in again.</div>
         <?php endif; ?>
     </div>
+
+<script>
+function fetchAvailablePCs() {
+    const lab = document.getElementById('lab').value;
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time_in').value;
+    const pcGroup = document.getElementById('pc-select-group');
+    const pcSelect = document.getElementById('pc_number');
+    let url = `get_available_pcs.php?lab=${lab}`;
+    if (date) url += `&date=${date}`;
+    if (time) url += `&time=${time}`;
+    if (!lab) {
+        pcGroup.style.display = 'none';
+        pcSelect.required = false;
+        return;
+    }
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            pcSelect.innerHTML = '';
+            if (data.length > 0) {
+                // Add placeholder
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Select a PC';
+                placeholder.disabled = true;
+                placeholder.selected = true;
+                pcSelect.appendChild(placeholder);
+
+                data.forEach(pc => {
+                    const opt = document.createElement('option');
+                    opt.value = pc;
+                    opt.textContent = 'PC ' + pc;
+                    pcSelect.appendChild(opt);
+                });
+                pcGroup.style.display = '';
+                pcSelect.required = true;
+            } else {
+                pcGroup.style.display = 'none';
+                pcSelect.required = false;
+            }
+        });
+}
+document.getElementById('lab').addEventListener('change', fetchAvailablePCs);
+document.getElementById('date').addEventListener('change', fetchAvailablePCs);
+document.getElementById('time_in').addEventListener('change', fetchAvailablePCs);
+</script>
 </body>
 </html>
 </div>

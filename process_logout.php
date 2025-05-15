@@ -12,7 +12,7 @@ try {
     $pdo->beginTransaction();
     
     // Get the sit-in record
-    $stmt = $pdo->prepare("SELECT id_number FROM sit_ins WHERE id = ? AND time_out IS NULL");
+    $stmt = $pdo->prepare("SELECT id_number, lab, pc_number FROM sit_ins WHERE id = ? AND time_out IS NULL");
     $stmt->execute([$_POST['sit_in_id']]);
     $sitin = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -25,6 +25,12 @@ try {
     $current_time = date('H:i:s');
     $update_stmt = $pdo->prepare("UPDATE sit_ins SET time_out = ? WHERE id = ?");
     $update_stmt->execute([$current_time, $_POST['sit_in_id']]);
+    
+    // Set the PC as available again in lab_pcs
+    if (!empty($sitin['lab']) && !empty($sitin['pc_number'])) {
+        $set_pc_stmt = $pdo->prepare("UPDATE lab_pcs SET is_available = 1 WHERE lab = ? AND pc_number = ?");
+        $set_pc_stmt->execute([$sitin['lab'], $sitin['pc_number']]);
+    }
     
     // Reduce the remaining sessions by 1
     $reduce_stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = ? AND remaining_sessions > 0");

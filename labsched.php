@@ -85,309 +85,305 @@ $timeSlots = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Schedule</title>
-    <link rel="stylesheet" href="admins.css">
-    <style>
-        .schedule-container {
-            margin-top: 20px;
-            overflow-x: auto;
-        }
-        
-        .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .schedule-table th, .schedule-table td {
-            border: 1px solid #ddd;
-            padding: 12px 8px;
-            text-align: center;
-        }
-        
-        .schedule-table th {
-            background-color: #343a40;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .schedule-table tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .lab-selector {
-            margin-bottom: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: flex-start;
-            align-items: center;
-        }
-        
-        .lab-card {
-            flex: 0 0 120px;
-            height: 90px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .lab-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .lab-card.selected {
-            border-color: #007bff;
-            background-color: #e7f1ff;
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-        }
-        
-        .lab-card h3 {
-            margin: 0;
-            font-size: 18px;
-            color: #333;
-        }
-        
-        .lab-card p {
-            margin: 5px 0 0;
-            font-size: 14px;
-            color: #777;
-        }
-        
-        .lab-selection-form {
-            display: none;
-        }
-        
-        .available {
-            background-color: #d4edda;
-        }
-        
-        .unavailable {
-            background-color: #f8d7da;
-        }
-        
-        .status-selector {
-            margin-bottom: 5px;
-        }
-        
-        .status-select {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ced4da;
-            width: 100%;
-            background-color: white;
-        }
-        
-        .submit-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 20px;
-            font-weight: 600;
-            transition: background-color 0.3s ease;
-        }
-        
-        .submit-btn:hover {
-            background-color: #0056b3;
-        }
-        
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        
-        .alert-success {
-            color: #155724;
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-        }
-        
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        
-        .legend {
-            margin: 25px 0;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 15px;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(0,0,0,0.1);
-        }
-        
-        .schedule-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .schedule-heading h3 {
-            margin: 0;
-            font-size: 22px;
-            color: #333;
-        }
-        
-        .info-text {
-            color: #6c757d;
-            margin-bottom: 20px;
-        }
-        
-        .time-column {
-            background-color: #f2f2f2;
-            font-weight: 600;
-        }
-        
-        @media (max-width: 768px) {
-            .lab-card {
-                flex: 0 0 calc(33.333% - 10px);
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .lab-card {
-                flex: 0 0 calc(50% - 10px);
-            }
-        }
-    </style>
+    <title>Lab Schedule | Admin Panel</title>
+    <link rel="stylesheet" href="admin_style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="sidebar">
-        <h2>Admin Panel</h2>
+        <h2><i class="fas fa-laptop-code"></i> Admin Panel</h2>
         <ul>
-            <li><a href="admin_dashboard.php">Dashboard</a></li>
-            <li><a href="reservations.php">Pending Reservation</a></li>
-            <li><a href="current_sitin.php">Current Sit-In</a></li>
-            <li><a href="sitin_reports.php">Sit-In Reports</a></li>
-            <li><a href="students.php">Students</a></li>
-            <li><a href="announcement.php">Announcement</a></li>
-            <li><a href="feedback.php">Feedback</a></li>
-            <li><a href="labsched.php">Lab Schedule</a></li>
-            <li><a href="resources.php">Lab Resources</a></li>
-            <li><a href="leaderboard.php">Leaderboard</a></li>
-            <li><a href="logout.php">Logout</a></li>
+            <li><a href="admin_dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="reservations.php"><i class="fas fa-calendar-check"></i> Pending Reservation</a></li>
+            <li><a href="current_sitin.php"><i class="fas fa-users"></i> Current Sit-In</a></li>
+            <li><a href="sitin_reports.php"><i class="fas fa-file-alt"></i> Sit-In Reports</a></li>
+            <li><a href="students.php"><i class="fas fa-user-graduate"></i> Students</a></li>
+            <li><a href="announcement.php"><i class="fas fa-bullhorn"></i> Announcement</a></li>
+            <li><a href="feedback.php"><i class="fas fa-comment-alt"></i> Feedback</a></li>
+            <li><a href="labsched.php" class="active"><i class="fas fa-clock"></i> Lab Schedule</a></li>
+            <li><a href="resources.php"><i class="fas fa-book"></i> Lab Resources</a></li>
+            <li><a href="leaderboard.php"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+            <li><a href="pc_management.php"><i class="fas fa-desktop"></i> PC Management</a></li>
+            <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
+
     <div class="content">
-        <h2>Lab Schedule Management</h2>
-        
+        <div class="content-header">
+            <h1><i class="fas fa-clock"></i> Lab Schedule Management</h1>
+        </div>
+
         <?php if (isset($success_message)): ?>
-            <div class="alert alert-success"><?php echo $success_message; ?></div>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <?php echo $success_message; ?>
+            </div>
         <?php endif; ?>
         
         <?php if (isset($error_message)): ?>
-            <div class="alert alert-danger"><?php echo $error_message; ?></div>
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i> <?php echo $error_message; ?>
+            </div>
         <?php endif; ?>
-        
-        <div class="lab-selector">
-            <form method="GET" action="labsched.php" class="lab-selection-form" id="labSelectionForm">
-                <input type="hidden" name="lab" id="selectedLab" value="<?php echo $selected_lab; ?>">
-            </form>
-            
-            <?php foreach ($labs as $lab): 
-                $isSelected = ($lab == $selected_lab);
-            ?>
-                <div class="lab-card <?php echo $isSelected ? 'selected' : ''; ?>" 
-                     data-lab="<?php echo $lab; ?>" 
-                     onclick="selectLab('<?php echo $lab; ?>')">
-                    <h3>Lab <?php echo $lab; ?></h3>
-                    <p>Room #<?php echo $lab; ?></p>
-                </div>
-            <?php endforeach; ?>
-        </div>
-        
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color available"></div>
-                <span>Available</span>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-building"></i> Select Lab Room</h3>
             </div>
-            <div class="legend-item">
-                <div class="legend-color unavailable"></div>
-                <span>Unavailable</span>
-            </div>
-        </div>
-        
-        <form method="POST" action="labsched.php">
-            <input type="hidden" name="lab" value="<?php echo $selected_lab; ?>">
-            
-            <div class="schedule-container">
-                <div class="schedule-heading">
-                    <h3>Schedule for Lab <?php echo $selected_lab; ?></h3>
-                </div>
-                <p class="info-text">Set the availability status for each time slot in the selected lab.</p>
-                
-                <table class="schedule-table">
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>Monday</th>
-                            <th>Tuesday</th>
-                            <th>Wednesday</th>
-                            <th>Thursday</th>
-                            <th>Friday</th>
-                            <th>Saturday</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($timeSlots as $time_key => $timeDisplay): ?>
-                            <tr>
-                                <td class="time-column"><?php echo $timeDisplay; ?></td>
-                                <?php foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as $day): 
-                                    $current_status = isset($scheduleData[$day][$time_key]) ? $scheduleData[$day][$time_key] : 'available';
-                                    $cell_class = $current_status == 'available' ? 'available' : 'unavailable';
-                                ?>
-                                    <td class="<?php echo $cell_class; ?>">
-                                        <div class="status-selector">
-                                            <select name="<?php echo $day; ?>[<?php echo $time_key; ?>]" class="status-select" data-day="<?php echo $day; ?>" data-time="<?php echo $time_key; ?>">
-                                                <option value="available" <?php echo $current_status == 'available' ? 'selected' : ''; ?>>Available</option>
-                                                <option value="unavailable" <?php echo $current_status == 'unavailable' ? 'selected' : ''; ?>>Unavailable</option>
-                                            </select>
-                                        </div>
-                                    </td>
-                                <?php endforeach; ?>
-                            </tr>
+            <div class="card-body">
+                <div class="lab-selector">
+                    <form method="GET" action="labsched.php" class="lab-selection-form" id="labSelectionForm">
+                        <input type="hidden" name="lab" id="selectedLab" value="<?php echo $selected_lab; ?>">
+                    </form>
+                    
+                    <div class="lab-grid">
+                        <?php foreach ($labs as $lab): 
+                            $isSelected = ($lab == $selected_lab);
+                        ?>
+                            <div class="lab-card <?php echo $isSelected ? 'selected' : ''; ?>" 
+                                 data-lab="<?php echo $lab; ?>" 
+                                 onclick="selectLab('<?php echo $lab; ?>')">
+                                <div class="lab-icon">
+                                    <i class="fas fa-laptop"></i>
+                                </div>
+                                <div class="lab-info">
+                                    <h3>Lab <?php echo $lab; ?></h3>
+                                    <p>Room #<?php echo $lab; ?></p>
+                                </div>
+                            </div>
                         <?php endforeach; ?>
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
-            
-            <button type="submit" name="update_schedule" class="submit-btn">Update Schedule</button>
-        </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-calendar-alt"></i> Schedule for Lab <?php echo $selected_lab; ?></h3>
+            </div>
+            <div class="card-body">
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color available"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color unavailable"></div>
+                        <span>Unavailable</span>
+                    </div>
+                </div>
+
+                <form method="POST" action="labsched.php">
+                    <input type="hidden" name="lab" value="<?php echo $selected_lab; ?>">
+                    
+                    <div class="table-container">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                    <th>Saturday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($timeSlots as $time_key => $timeDisplay): ?>
+                                    <tr>
+                                        <td class="time-column"><?php echo $timeDisplay; ?></td>
+                                        <?php foreach(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as $day): 
+                                            $current_status = isset($scheduleData[$day][$time_key]) ? $scheduleData[$day][$time_key] : 'available';
+                                            $cell_class = $current_status == 'available' ? 'available' : 'unavailable';
+                                        ?>
+                                            <td class="<?php echo $cell_class; ?>">
+                                                <div class="status-selector">
+                                                    <select name="<?php echo $day; ?>[<?php echo $time_key; ?>]" class="status-select" data-day="<?php echo $day; ?>" data-time="<?php echo $time_key; ?>">
+                                                        <option value="available" <?php echo $current_status == 'available' ? 'selected' : ''; ?>>Available</option>
+                                                        <option value="unavailable" <?php echo $current_status == 'unavailable' ? 'selected' : ''; ?>>Unavailable</option>
+                                                    </select>
+                                                </div>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" name="update_schedule" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Schedule
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    
+
+    <style>
+        /* Lab Grid Layout */
+        .lab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .lab-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .lab-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .lab-card.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+
+        .lab-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--light-bg);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .lab-info h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+
+        .lab-info p {
+            margin: 0.25rem 0 0;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Schedule Table Styles */
+        .schedule-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1rem 0;
+        }
+
+        .schedule-table th {
+            background: var(--light-bg);
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .schedule-table td {
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .time-column {
+            font-weight: 500;
+            background: var(--light-bg);
+        }
+
+        .status-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .available {
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+
+        .unavailable {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Legend Styles */
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 0.25rem;
+        }
+
+        .legend-color.available {
+            background-color: rgba(34, 197, 94, 0.2);
+            border: 2px solid rgba(34, 197, 94, 0.4);
+        }
+
+        .legend-color.unavailable {
+            background-color: rgba(239, 68, 68, 0.2);
+            border: 2px solid rgba(239, 68, 68, 0.4);
+        }
+
+        /* Form Actions */
+        .form-actions {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .lab-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .schedule-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .lab-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .legend {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Handle status change

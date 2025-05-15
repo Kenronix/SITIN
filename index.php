@@ -53,6 +53,32 @@ try {
     $recent_reservations = [];
 }
 
+// Get notifications for the current user
+try {
+    $notifStmt = $pdo->prepare("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 10");
+    $notifStmt->execute([$_SESSION['id_number']]);
+    $notifications = $notifStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Count unread notifications
+    $unreadStmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = FALSE");
+    $unreadStmt->execute([$_SESSION['id_number']]);
+    $unread_count = $unreadStmt->fetchColumn();
+} catch (PDOException $e) {
+    $notifications = [];
+    $unread_count = 0;
+}
+
+// Handle marking notifications as read via AJAX
+if (isset($_POST['mark_read']) && isset($_POST['notification_id'])) {
+    try {
+        $updateStmt = $pdo->prepare("UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?");
+        $updateStmt->execute([$_POST['notification_id'], $_SESSION['id_number']]);
+        exit(json_encode(['success' => true]));
+    } catch (PDOException $e) {
+        exit(json_encode(['success' => false, 'error' => $e->getMessage()]));
+    }
+}
+
 if (isset($_GET['logout'])) {
     session_destroy();
     header("Location: login.php");
@@ -162,7 +188,135 @@ function getFileIcon($fileType) {
     <title>Dashboard - SITIN</title>
     <link rel="stylesheet" href="modern-style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+    .notification-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .notification-bell {
+        position: relative;
+        cursor: pointer;
+        padding: 10px;
+        color: #666;
+        transition: color 0.3s ease;
+    }
+
+    .notification-bell:hover {
+        color: #4a90e2;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: #ff4444;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .notification-dropdown {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        width: 350px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+
+    .notification-dropdown.show {
+        display: block;
+    }
+
+    .notification-header {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notification-header h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .mark-all-read {
+        background: none;
+        border: none;
+        color: #4a90e2;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 5px 10px;
+    }
+
+    .notification-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .notification-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: start;
+        gap: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .notification-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .notification-item.unread {
+        background-color: #f0f7ff;
+    }
+
+    .notification-icon {
+        color: #4a90e2;
+        font-size: 18px;
+        padding-top: 2px;
+    }
+
+    .notification-content {
+        flex: 1;
+    }
+
+    .notification-content p {
+        margin: 0 0 5px 0;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .notification-content small {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .no-notifications {
+        padding: 30px;
+        text-align: center;
+        color: #666;
+    }
+
+    .no-notifications i {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .no-notifications p {
+        margin: 0;
+    }
+    </style>
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
@@ -177,6 +331,47 @@ function getFileIcon($fileType) {
                         <p class="text-secondary">You have <?php echo $remaining_sessions; ?> remaining sessions</p>
                     </div>
                     <div class="d-flex align-items-center gap-3">
+                        <div class="notification-container">
+                            <div class="notification-bell" onclick="toggleNotifications()">
+                                <i class="fas fa-bell"></i>
+                                <?php if ($unread_count > 0): ?>
+                                    <span class="notification-badge"><?php echo $unread_count; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="notification-dropdown" id="notificationDropdown">
+                                <div class="notification-header">
+                                    <h3>Notifications</h3>
+                                    <?php if (count($notifications) > 0): ?>
+                                        <button onclick="markAllRead()" class="mark-all-read">Mark all as read</button>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="notification-list">
+                                    <?php if (count($notifications) > 0): ?>
+                                        <?php foreach ($notifications as $notification): ?>
+                                            <div class="notification-item <?php echo $notification['is_read'] ? '' : 'unread'; ?>" 
+                                                 data-id="<?php echo $notification['id']; ?>"
+                                                 onclick="markAsRead(<?php echo $notification['id']; ?>)">
+                                                <div class="notification-icon">
+                                                    <i class="fas fa-<?php 
+                                                        echo $notification['type'] === 'reservation' ? 'calendar-check' : 
+                                                            ($notification['type'] === 'announcement' ? 'bullhorn' : 'info-circle'); 
+                                                    ?>"></i>
+                                                </div>
+                                                <div class="notification-content">
+                                                    <p><?php echo htmlspecialchars($notification['message']); ?></p>
+                                                    <small><?php echo date('M d, Y g:i A', strtotime($notification['created_at'])); ?></small>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="no-notifications">
+                                            <i class="fas fa-bell-slash"></i>
+                                            <p>No notifications</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
                         <div class="status-badge status-approved">
                             <i class="fas fa-check-circle"></i>
                             <span>Active Student</span>
@@ -547,6 +742,68 @@ function getFileIcon($fileType) {
                     document.getElementById(tab).classList.add('active');
                     tabButton.classList.add('active');
                 }
+            }
+        });
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function markAsRead(notificationId) {
+            fetch('index.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `mark_read=1&notification_id=${notificationId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const notification = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+                    if (notification) {
+                        notification.classList.remove('unread');
+                        updateNotificationBadge();
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function markAllRead() {
+            const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+            unreadNotifications.forEach(notification => {
+                const notificationId = notification.dataset.id;
+                markAsRead(notificationId);
+            });
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.querySelector('.notification-badge');
+            const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+            
+            if (unreadCount > 0) {
+                if (badge) {
+                    badge.textContent = unreadCount;
+                } else {
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'notification-badge';
+                    newBadge.textContent = unreadCount;
+                    document.querySelector('.notification-bell').appendChild(newBadge);
+                }
+            } else if (badge) {
+                badge.remove();
+            }
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('notificationDropdown');
+            const bell = document.querySelector('.notification-bell');
+            
+            if (!bell.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('show');
             }
         });
     </script>

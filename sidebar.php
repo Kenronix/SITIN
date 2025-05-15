@@ -47,7 +47,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <span>Dashboard</span>
         </a>
         
-        <a href="reservation.php" class="nav-link <?php echo $current_page === 'reservation.php' ? 'active' : ''; ?>">
+        <a href="student_reservation.php" class="nav-link <?php echo $current_page === 'reservation.php' ? 'active' : ''; ?>">
             <i class="fas fa-calendar-plus"></i>
             <span>Make Reservation</span>
         </a>

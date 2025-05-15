@@ -6,43 +6,44 @@ include 'conn.php'; // Database connection
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-// Default query
-$query = "SELECT s.id_number, CONCAT(u.firstname, ' ', u.lastname) AS student_name, 
-          s.lab, s.time_in, s.time_out, s.purpose, date(s.time_in) AS date,
-          CASE WHEN s.time_out IS NOT NULL THEN 'completed' ELSE 'active' END AS status
+// Get filter parameters
+$start_date = $_GET['start_date'] ?? date('Y-m-d', strtotime('-30 days'));
+$end_date = $_GET['end_date'] ?? date('Y-m-d');
+$lab_filter = $_GET['lab'] ?? '';
+$search = $_GET['search'] ?? '';
+
+// Base query for sit-ins
+$query = "SELECT s.*, CONCAT(u.firstname, ' ', u.lastname) as student_name, 
+          u.course, u.year_level
           FROM sit_ins s 
           JOIN users u ON s.id_number = u.id_number 
-          WHERE s.time_out IS NOT NULL";
+          WHERE s.date BETWEEN ? AND ?";
 
-// Filters
-$lab_filter = isset($_GET['lab']) ? $_GET['lab'] : '';
-$purpose_filter = isset($_GET['purpose']) ? $_GET['purpose'] : '';
+$params = [$start_date, $end_date];
 
-// Apply filters if set
-$params = [];
+// Add lab filter if specified
 if (!empty($lab_filter)) {
-    $query .= " AND s.lab = :lab";
-    $params[':lab'] = $lab_filter;
+    $query .= " AND s.lab = ?";
+    $params[] = $lab_filter;
 }
 
-if (!empty($purpose_filter)) {
-    $query .= " AND s.purpose = :purpose";
-    $params[':purpose'] = $purpose_filter;
+// Add search filter if specified
+if (!empty($search)) {
+    $query .= " AND (s.id_number LIKE ? OR CONCAT(u.firstname, ' ', u.lastname) LIKE ? OR s.purpose LIKE ?)";
+    $search_param = "%$search%";
+    $params = array_merge($params, [$search_param, $search_param, $search_param]);
 }
 
-$query .= " ORDER BY s.time_in DESC";
+$query .= " ORDER BY s.date DESC, s.time_in DESC";
 
-// Get distinct labs and purposes for filter dropdowns
-$labs_stmt = $pdo->query("SELECT DISTINCT lab FROM sit_ins ORDER BY lab");
-$labs = $labs_stmt->fetchAll(PDO::FETCH_COLUMN);
-
-$purposes_stmt = $pdo->query("SELECT DISTINCT purpose FROM sit_ins ORDER BY purpose");
-$purposes = $purposes_stmt->fetchAll(PDO::FETCH_COLUMN);
-
-// Execute the filtered query
+// Get sit-ins
 $stmt = $pdo->prepare($query);
 $stmt->execute($params);
-$sitin_reports = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$sit_ins = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Get available labs for filter
+$labs_stmt = $pdo->query("SELECT DISTINCT lab FROM sit_ins ORDER BY lab");
+$available_labs = $labs_stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // Define the header for all exports
 $report_header = "University of Cebu College of Computer Studies Computer Laboratory Sit-in Monitoring System Report";
@@ -63,7 +64,8 @@ if (isset($_GET['export'])) {
             $rows_js = '';
             foreach ($export_data as $row) {
                 $purpose = strlen($row['purpose']) > 25 ? substr($row['purpose'], 0, 23) . '...' : $row['purpose'];
-                $formatted_date = date('M d, Y', strtotime($row['time_in'])); // Extract and format the date
+                $formatted_date = date('M d, Y', strtotime($row['date']));
+                $status = getSitInStatus($row);
                 $rows_js .= json_encode([
                     $row['id_number'],
                     $row['student_name'],
@@ -71,7 +73,7 @@ if (isset($_GET['export'])) {
                     date('h:i A', strtotime($row['time_in'])),
                     date('h:i A', strtotime($row['time_out'])),
                     $purpose,
-                    $row['status'],
+                    $status,
                     $formatted_date
                 ]) . ",\n";
             }
@@ -151,6 +153,7 @@ if (isset($_GET['export'])) {
             
             // Data rows
             foreach ($export_data as $row) {
+                $status = getSitInStatus($row);
                 $formatted_row = [
                     $row['id_number'],
                     $row['student_name'],
@@ -158,7 +161,7 @@ if (isset($_GET['export'])) {
                     date('h:i A', strtotime($row['time_in'])),
                     date('h:i A', strtotime($row['time_out'])),
                     $row['purpose'],
-                    $row['status'],
+                    $status,
                     date('F d, Y', strtotime($row['date']))
                 ];
                 fputcsv($output, $formatted_row);
@@ -214,6 +217,7 @@ if (isset($_GET['export'])) {
             echo "</tr>";
             
             foreach ($export_data as $row) {
+                $status = getSitInStatus($row);
                 echo "<tr>";
                 echo "<td>" . $row['id_number'] . "</td>";
                 echo "<td>" . $row['student_name'] . "</td>";
@@ -221,7 +225,7 @@ if (isset($_GET['export'])) {
                 echo "<td>" . date('h:i A', strtotime($row['time_in'])) . "</td>";
                 echo "<td>" . date('h:i A', strtotime($row['time_out'])) . "</td>";
                 echo "<td>" . $row['purpose'] . "</td>";
-                echo "<td>" . $row['status'] . "</td>";
+                echo "<td>" . $status . "</td>";
                 echo "<td>" . date('F d, Y', strtotime($row['date'])) . "</td>";
                 echo "</tr>";
             }
@@ -237,325 +241,403 @@ if (isset($_GET['export'])) {
             exit;
     }
 }
+
+// Helper function to determine status
+function getSitInStatus($row) {
+    if (isset($row['time_out']) && !empty($row['time_out'])) {
+        return 'Completed';
+    }
+    return 'Active';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sit-In Reports</title>
-    <link rel="stylesheet" href="admins.css">
-    <style>
-        .filters {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #f5f5f5;
-            border-radius: 5px;
-        }
-        
-        .filters form {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .filters select, .filters button {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .filters button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .filters button:hover {
-            background-color: #45a049;
-        }
-        
-        .export-options {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .export-btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .export-btn.pdf {
-            background-color: #f44336;
-        }
-        
-        .export-btn.csv {
-            background-color: #2196F3;
-        }
-        
-        .export-btn.excel {
-            background-color: #4CAF50;
-        }
-        
-        .export-btn.print {
-            background-color: #607D8B;
-        }
-        
-        .export-btn:hover {
-            opacity: 0.9;
-        }
-        
-        .status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .status-completed {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .count-info {
-            margin-bottom: 15px;
-            font-style: italic;
-            color: #666;
-        }
-        
-        /* Print-specific styles */
-        @media print {
-            .sidebar, .filters, .export-options, .count-info {
-                display: none !important;
-            }
-            
-            body {
-                margin: 0;
-                padding: 20px;
-                font-family: Arial, sans-serif;
-            }
-            
-            .content {
-                margin-left: 0 !important;
-                width: 100% !important;
-            }
-            
-            h1 {
-                text-align: center;
-                margin-bottom: 5px;
-            }
-            
-            .report-header {
-                text-align: center;
-                font-size: 18px;
-                font-weight: bold;
-                margin-bottom: 20px;
-            }
-            
-            .report-date {
-                text-align: center;
-                font-size: 14px;
-                margin-bottom: 20px;
-            }
-            
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            
-            th, td {
-                border: 1px solid #000;
-                padding: 8px;
-            }
-            
-            th {
-                background-color: #f2f2f2 !important;
-                color: #000 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            
-            .status.status-completed {
-                background-color: #d4edda !important;
-                color: #155724 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-        }
-    </style>
+    <title>Sit-In Reports | Admin Panel</title>
+    <link rel="stylesheet" href="admin_style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="sidebar">
-        <h2>Admin Panel</h2>
+        <h2><i class="fas fa-laptop-code"></i> Admin Panel</h2>
         <ul>
-            <li><a href="admin_dashboard.php">Dashboard</a></li>
-            <li><a href="reservations.php">Pending Reservation</a></li>
-            <li><a href="current_sitin.php">Current Sit-In</a></li>
-            <li><a href="sitin_reports.php" class="active">Sit-In Reports</a></li>
-            <li><a href="students.php">Students</a></li>
-            <li><a href="announcement.php">Announcement</a></li>
-            <li><a href="feedback.php">Feedback</a></li>
-            <li><a href="labsched.php">Lab Schedule</a></li>
-            <li><a href="resources.php">Lab Resources</a></li>
-            <li><a href="leaderboard.php">Leaderboard</a></li>
-            <li><a href="logout.php">Logout</a></li>
+            <li><a href="admin_dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="reservations.php"><i class="fas fa-calendar-check"></i> Pending Reservation</a></li>
+            <li><a href="current_sitin.php"><i class="fas fa-users"></i> Current Sit-In</a></li>
+            <li><a href="sitin_reports.php" class="active"><i class="fas fa-file-alt"></i> Sit-In Reports</a></li>
+            <li><a href="students.php"><i class="fas fa-user-graduate"></i> Students</a></li>
+            <li><a href="announcement.php"><i class="fas fa-bullhorn"></i> Announcement</a></li>
+            <li><a href="feedback.php"><i class="fas fa-comment-alt"></i> Feedback</a></li>
+            <li><a href="labsched.php"><i class="fas fa-clock"></i> Lab Schedule</a></li>
+            <li><a href="resources.php"><i class="fas fa-book"></i> Lab Resources</a></li>
+            <li><a href="leaderboard.php"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+            <li><a href="pc_management.php"><i class="fas fa-desktop"></i> PC Management</a></li>
+            <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
-    <div class="content">
-        <h1>Sit-In Reports</h1>
-        
-        <!-- These headers will show when printing -->
 
-        
-        <div class="filters">
-            <form method="GET" action="">
-                <div>
-                    <label for="lab">Filter by Lab:</label>
-                    <select name="lab" id="lab">
+    <div class="content">
+        <div class="content-header">
+            <h1><i class="fas fa-file-alt"></i> Sit-In Reports</h1>
+            <div class="header-actions">
+                <div class="export-buttons">
+                    <a href="?export=pdf<?= !empty($lab_filter) ? '&lab='.urlencode($lab_filter) : '' ?><?= !empty($search) ? '&search='.urlencode($search) : '' ?><?= !empty($start_date) ? '&start_date='.urlencode($start_date) : '' ?><?= !empty($end_date) ? '&end_date='.urlencode($end_date) : '' ?>" class="btn btn-secondary">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </a>
+                    <a href="?export=csv<?= !empty($lab_filter) ? '&lab='.urlencode($lab_filter) : '' ?><?= !empty($search) ? '&search='.urlencode($search) : '' ?><?= !empty($start_date) ? '&start_date='.urlencode($start_date) : '' ?><?= !empty($end_date) ? '&end_date='.urlencode($end_date) : '' ?>" class="btn btn-secondary">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </a>
+                    <a href="?export=excel<?= !empty($lab_filter) ? '&lab='.urlencode($lab_filter) : '' ?><?= !empty($search) ? '&search='.urlencode($search) : '' ?><?= !empty($start_date) ? '&start_date='.urlencode($start_date) : '' ?><?= !empty($end_date) ? '&end_date='.urlencode($end_date) : '' ?>" class="btn btn-secondary">
+                        <i class="fas fa-file-excel"></i> Export Excel
+                    </a>
+                    <button onclick="printReport()" class="btn btn-secondary">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-container">
+            <form id="filterForm" class="filters-form" method="GET">
+                <div class="filter-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" 
+                           value="<?= htmlspecialchars($start_date) ?>" class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" 
+                           value="<?= htmlspecialchars($end_date) ?>" class="form-control">
+                </div>
+                <div class="filter-group">
+                    <label for="lab">Lab</label>
+                    <select id="lab" name="lab" class="form-control">
                         <option value="">All Labs</option>
-                        <option value="524" <?= ($lab_filter == '524') ? 'selected' : '' ?>>524</option>
-                        <option value="526" <?= ($lab_filter == '526') ? 'selected' : '' ?>>526</option>
-                        <option value="528" <?= ($lab_filter == '528') ? 'selected' : '' ?>>528</option>
-                        <option value="530" <?= ($lab_filter == '530') ? 'selected' : '' ?>>530</option>
-                        <option value="542" <?= ($lab_filter == '542') ? 'selected' : '' ?>>542</option>
-                        <option value="544" <?= ($lab_filter == '544') ? 'selected' : '' ?>>544</option>
-                        <option value="517" <?= ($lab_filter == '517') ? 'selected' : '' ?>>517</option>
-                        <?php foreach ($labs as $lab): ?>
-                            <?php if (!in_array($lab, ['524', '526', '528', '530', '542', '544', '517'])): ?>
-                                <option value="<?= htmlspecialchars($lab) ?>" <?= ($lab_filter == $lab) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($lab) ?>
-                                </option>
-                            <?php endif; ?>
+                        <?php foreach ($available_labs as $lab): ?>
+                            <option value="<?= htmlspecialchars($lab) ?>" 
+                                    <?= $lab_filter === $lab ? 'selected' : '' ?>>
+                                Lab <?= htmlspecialchars($lab) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
-                <div>
-                    <label for="purpose">Filter by Purpose:</label>
-                    <select name="purpose" id="purpose">
-                        <option value="">All Purposes</option>
-                        <option value="C Programming" <?= ($purpose_filter == 'C Programming') ? 'selected' : '' ?>>C Programming</option>
-                        <option value="Java Programming" <?= ($purpose_filter == 'Java Programming') ? 'selected' : '' ?>>Java Programming</option>
-                        <option value="C# Programming" <?= ($purpose_filter == 'C# Programming') ? 'selected' : '' ?>>C# Programming</option>
-                        <option value="System Integration and Architecture" <?= ($purpose_filter == 'System Integration and Architecture') ? 'selected' : '' ?>>System Integration and Architecture</option>
-                        <option value="Embedded Systems and IOT" <?= ($purpose_filter == 'Embedded Systems and IOT') ? 'selected' : '' ?>>Embedded Systems and IOT</option>
-                        <option value="Digital Logic Design" <?= ($purpose_filter == 'Digital Logic Design') ? 'selected' : '' ?>>Digital Logic Design</option>
-                        <option value="Computer Application" <?= ($purpose_filter == 'Computer Application') ? 'selected' : '' ?>>Computer Application</option>
-                        <option value="Database" <?= ($purpose_filter == 'Database') ? 'selected' : '' ?>>Database</option>
-                        <option value="Project Management" <?= ($purpose_filter == 'Project Management') ? 'selected' : '' ?>>Project Management</option>
-                        <option value="Python Programming" <?= ($purpose_filter == 'Python Programming') ? 'selected' : '' ?>>Python Programming</option>
-                        <option value="Web Design" <?= ($purpose_filter == 'Web Design') ? 'selected' : '' ?>>Web Design</option>
-                        <option value="Mobile Application Development" <?= ($purpose_filter == 'Mobile Application Development') ? 'selected' : '' ?>>Mobile Application Development</option>
-                        <option value="Artificial Intelligence" <?= ($purpose_filter == 'Artificial Intelligence') ? 'selected' : '' ?>>Artificial Intelligence</option>
-                        <option value="Web Development" <?= ($purpose_filter == 'Web Development') ? 'selected' : '' ?>>Web Development</option>
-                        <option value="Others" <?= ($purpose_filter == 'Others') ? 'selected' : '' ?>>Others</option>
-                        <?php foreach ($purposes as $purpose): ?>
-                            <?php if (!in_array($purpose, ['C Programming', 'Java Programming', 'C# Programming','System Integration and Architecture','Embedded Systems and IOT','Digital Logic Design','Computer Application','Database','Project Management','Python Programming','Web Design','Mobile Application Development','Artificial Intelligence','Others'])): ?>
-                                <option value="<?= htmlspecialchars($purpose) ?>" <?= ($purpose_filter == $purpose) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($purpose) ?>
-                                </option>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </select>
+                <div class="filter-group">
+                    <label for="search">Search</label>
+                    <input type="text" id="search" name="search" 
+                           value="<?= htmlspecialchars($search) ?>" 
+                           placeholder="Search by ID, name, or purpose" class="form-control">
                 </div>
-                
-                <button type="submit">Apply Filters</button>
-               
+                <div class="filter-group">
+                    <label for=""></label>
+                    <button type="submit" class="btn btn-primary apply-filters-btn">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                </div>
             </form>
         </div>
-        
-        <div class="export-options">
-            <h4>Generate Reports:</h4>
-            <a href="?export=pdf<?= !empty($lab_filter) ? '&lab='.urlencode($lab_filter) : '' ?><?= !empty($purpose_filter) ? '&purpose='.urlencode($purpose_filter) : '' ?>" class="export-btn pdf">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5.5 3a.5.5 0 0 1 .5.5V9h5a.5.5 0 0 1 0 1H6v2.5a.5.5 0 0 1-1 0v-9a.5.5 0 0 1 .5-.5z"/>
-                    <path d="M4 1h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2z"/>
-                </svg>
-                Export as PDF
-            </a>
-            <a href="?export=csv<?= !empty($lab_filter) ? '&lab='.urlencode($lab_filter) : '' ?><?= !empty($purpose_filter) ? '&purpose='.urlencode($purpose_filter) : '' ?>" class="export-btn csv">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M4.5 3a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-7z"/>
-                    <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8z"/>
-                </svg>
-                Export as CSV
-            </a>
-            <a href="?export=excel<?= !empty($lab_filter) ? '&lab='.urlencode($lab_filter) : '' ?><?= !empty($purpose_filter) ? '&purpose='.urlencode($purpose_filter) : '' ?>" class="export-btn excel">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm2 .5v11a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5z"/>
-                </svg>
-                Export as Excel
-            </a>
-            <button onclick="window.print();" class="export-btn print">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
-                </svg>
-                Print Report
-            </button>
-        </div>
 
-        <div class="count-info">
-            Showing <?= count($sitin_reports) ?> records 
-            <?php if (!empty($lab_filter) || !empty($purpose_filter)): ?>
-                with applied filters
+        <!-- Sit-In Records Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3>Sit-In Records</h3>
+                <span class="record-count"><?= count($sit_ins) ?> records found</span>
+            </div>
+            
+            <?php if (!empty($sit_ins)): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Course & Year</th>
+                            <th>Lab</th>
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                            <th>Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($sit_ins as $sitin): ?>
+                            <tr>
+                                <td>
+                                    <span class="date-badge">
+                                        <i class="far fa-calendar-alt"></i>
+                                        <?= date('M d, Y', strtotime($sitin['date'])) ?>
+                                    </span>
+                                </td>
+                                <td><?= htmlspecialchars($sitin['id_number']) ?></td>
+                                <td>
+                                    <div class="student-info">
+                                        <span class="student-name"><?= htmlspecialchars($sitin['student_name']) ?></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="course-badge">
+                                        <?= htmlspecialchars($sitin['course']) ?> - 
+                                        <?= htmlspecialchars($sitin['year_level']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="lab-badge">
+                                        <i class="fas fa-laptop"></i>
+                                        <?= htmlspecialchars($sitin['lab']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="time-badge">
+                                        <i class="far fa-clock"></i>
+                                        <?= date('h:i A', strtotime($sitin['time_in'])) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if ($sitin['time_out']): ?>
+                                        <span class="time-badge">
+                                            <i class="far fa-clock"></i>
+                                            <?= date('h:i A', strtotime($sitin['time_out'])) ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="status status-pending"><?= getSitInStatus($sitin) ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= htmlspecialchars($sitin['purpose']) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div class="empty-state">
+                    <i class="fas fa-file-alt fa-3x"></i>
+                    <h3>No Sit-In Records Found</h3>
+                    <p>Try adjusting your filters to see more results.</p>
+                </div>
             <?php endif; ?>
         </div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>ID Number</th>
-                    <th>Student Name</th>
-                    <th>Lab</th>
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                    <th>Purpose</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($sitin_reports)): ?>
-                    <?php foreach ($sitin_reports as $report): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($report['id_number']) ?></td>
-                            <td><?= htmlspecialchars($report['student_name']) ?></td>
-                            <td><?= htmlspecialchars($report['lab']) ?></td>
-                            <td><?= htmlspecialchars(date('h:i A', strtotime($report['time_in']))) ?></td>
-                            <td><?= htmlspecialchars(date('h:i A', strtotime($report['time_out']))) ?></td>
-                            <td><?= htmlspecialchars($report['purpose']) ?></td>
-                            <td><span class="status status-completed"><?= htmlspecialchars($report['status']) ?></span></td>
-                            <td><?= htmlspecialchars(date('F d, Y', strtotime($report['date']))) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="7" class="no-data">No sit-in reports available.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-        
-        <script>
-            // JavaScript to handle printing with header
-            function printTable() {
-                window.print();
-            }
-        </script>
     </div>
+
+    <style>
+        /* Update styles */
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-color-dark);
+        }
+
+        @media print {
+            /* Hide everything except the print content */
+            body * {
+                visibility: hidden;
+            }
+            
+            .print-content,
+            .print-content * {
+                visibility: visible;
+            }
+            
+            .print-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .print-header {
+                text-align: center;
+                margin-bottom: 20px;
+                padding: 20px;
+                border-bottom: 2px solid #000;
+            }
+
+            .print-header h1 {
+                font-size: 24px;
+                margin: 0;
+                color: #000;
+            }
+
+            .print-header h2 {
+                font-size: 18px;
+                margin: 10px 0;
+                color: #333;
+            }
+
+            .print-header p {
+                font-size: 14px;
+                margin: 5px 0;
+                color: #666;
+            }
+
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            .print-table th,
+            .print-table td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: left;
+                font-size: 12px;
+            }
+
+            .print-table th {
+                background-color: #f5f5f5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .print-footer {
+                margin-top: 20px;
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+            }
+        }
+
+        /* Additional styles specific to sit-in reports */
+        .filters-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-form {
+            display: inline-flex;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .record-count {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+    </style>
+
+    <script>
+        function printReport() {
+            // Create print content
+            const printWindow = window.open('', '_blank');
+            const table = document.querySelector('.table-container table');
+            const filters = document.querySelector('.filters-form');
+            
+            // Get filter values
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const lab = document.getElementById('lab').value;
+            const search = document.getElementById('search').value;
+            
+            // Create print content HTML
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .print-header { text-align: center; margin-bottom: 20px; }
+                        .print-header h1 { font-size: 24px; margin: 0; }
+                        .print-header h2 { font-size: 18px; margin: 10px 0; }
+                        .print-header p { font-size: 14px; margin: 5px 0; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+                        th { background-color: #f5f5f5; }
+                        @media print {
+                            @page { margin: 1cm; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-header">
+                        <h1>University of Cebu</h1>
+                        <h2>College of Computer Studies</h2>
+                        <h3>Computer Laboratory Sit-in Monitoring System</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Student ID</th>
+                                <th>Student Name</th>
+                                <th>Course & Year</th>
+                                <th>Lab</th>
+                                <th>Time In</th>
+                                <th>Time Out</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Array.from(table.querySelectorAll('tbody tr')).map(row => `
+                                <tr>
+                                    ${Array.from(row.querySelectorAll('td')).map(cell => {
+                                        // Remove badges and icons for clean print
+                                        const content = cell.innerHTML.replace(/<[^>]*>/g, '');
+                                        return `<td>${content.trim()}</td>`;
+                                    }).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+            
+            // Write to print window and print
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            // Wait for content to load then print
+            printWindow.onload = function() {
+                printWindow.print();
+                printWindow.close();
+            };
+        }
+    </script>
 </body>
 </html>

@@ -17,9 +17,10 @@ $time_in = $_POST['time_in'] ?? '';
 $date = $_POST['date'] ?? '';
 $status = $_POST['status'] ?? 'Pending';
 $remaining_session = 30; // Default value
+$pc_number = $_POST['pc_number'] ?? null;
 
 // Validate the required fields
-if (empty($id_number) || empty($lab) || empty($purpose) || empty($time_in) || empty($date)) {
+if (empty($id_number) || empty($lab) || empty($purpose) || empty($time_in) || empty($date) || empty($pc_number)) {
     echo json_encode(['success' => false, 'message' => 'All fields are required']);
     exit;
 }
@@ -41,23 +42,24 @@ if ($selected_time < $start_time || $selected_time > $end_time) {
     exit;
 }
 
-// Check for existing reservations for the same lab, date, and time
-$check_sql = "SELECT COUNT(*) FROM reservations WHERE lab = :lab AND date = :date AND time_in = :time_in";
+// Check for existing reservations for the same lab, date, time and pc_number
+$check_sql = "SELECT COUNT(*) FROM reservations WHERE lab = :lab AND date = :date AND time_in = :time_in AND pc_number = :pc_number";
 $check_stmt = $pdo->prepare($check_sql);
 $check_stmt->execute([
     'lab' => $lab,
     'date' => $date,
-    'time_in' => $time_in
+    'time_in' => $time_in,
+    'pc_number' => $pc_number
 ]);
 
 if ($check_stmt->fetchColumn() > 0) {
-    echo json_encode(['success' => false, 'message' => 'This time slot is already reserved for the selected lab']);
+    echo json_encode(['success' => false, 'message' => 'This PC is already reserved for the selected time slot']);
     exit;
 }
 
-// Prepare SQL statement using PDO with status field
-$sql = "INSERT INTO reservations (id_number, lab, purpose, status, time_in, date, remaining_session) 
-        VALUES (:id_number, :lab, :purpose, :status, :time_in, :date, :remaining_session)";
+// Prepare SQL statement using PDO with status field and pc_number
+$sql = "INSERT INTO reservations (id_number, lab, pc_number, purpose, status, time_in, date, remaining_session) 
+        VALUES (:id_number, :lab, :pc_number, :purpose, :status, :time_in, :date, :remaining_session)";
 
 $stmt = $pdo->prepare($sql);
 
@@ -65,6 +67,7 @@ $stmt = $pdo->prepare($sql);
 $params = [
     'id_number' => $id_number,
     'lab' => $lab,
+    'pc_number' => $pc_number,
     'purpose' => $purpose,
     'status' => $status,
     'time_in' => $time_in,

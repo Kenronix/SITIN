@@ -47,23 +47,55 @@ try {
     $log_stmt = $pdo->prepare("INSERT INTO reward_logs (student_id, admin_id, points_given, timestamp) VALUES (?, ?, 1, NOW())");
     $log_stmt->execute([$student_id, $admin_id]);
     
+    try {
+        // Create notification for reward point
+        $notif_stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, type, created_at, is_read) VALUES (?, ?, 'reward', NOW(), FALSE)");
+        $notif_stmt->execute([$student_id, "You received a reward point! You now have " . $new_points . " points."]);
+    } catch (PDOException $e) {
+        error_log("Error creating reward notification: " . $e->getMessage());
+        throw new Exception("Failed to create reward notification: " . $e->getMessage());
+    }
+    
     // Process session grant if applicable
     $session_granted = false;
     if ($new_points % 3 == 0) {
-        // Add 1 session to the student's remaining_sessions
-        $session_stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions + 1 WHERE id_number = ?");
-        $session_stmt->execute([$student_id]);
-        $session_granted = true;
+        try {
+            // Add 1 session to the student's remaining_sessions
+            $session_stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions + 1 WHERE id_number = ?");
+            $session_stmt->execute([$student_id]);
+            $session_granted = true;
+            
+            // Create notification for bonus session
+            $bonus_notif_stmt = $pdo->prepare("INSERT INTO notifications (user_id, message, type, created_at, is_read) VALUES (?, ?, 'bonus_session', NOW(), FALSE)");
+            $bonus_notif_stmt->execute([$student_id, "Congratulations! You earned a bonus session for reaching " . $new_points . " reward points."]);
+        } catch (PDOException $e) {
+            error_log("Error processing bonus session: " . $e->getMessage());
+            throw new Exception("Failed to process bonus session: " . $e->getMessage());
+        }
     }
     
-    // Now log the student out automatically
-    // 1. Update sit_in record with time_out
-    $update_sitin_stmt = $pdo->prepare("UPDATE sit_ins SET time_out = NOW() WHERE id = ? AND time_out IS NULL");
-    $update_sitin_stmt->execute([$sit_in_id]);
-    
-    // 2. Reduce remaining_sessions by 1 (just like a regular logout)
-    $reduce_sessions_stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = ? AND remaining_sessions > 0");
-    $reduce_sessions_stmt->execute([$student_id]);
+    try {
+        // Now log the student out automatically
+        // 1. Update sit_in record with time_out
+        $update_sitin_stmt = $pdo->prepare("UPDATE sit_ins SET time_out = NOW() WHERE id = ? AND time_out IS NULL");
+        $update_sitin_stmt->execute([$sit_in_id]);
+        
+        // 1.5. Set the PC as available again in lab_pcs
+        $pc_stmt = $pdo->prepare("SELECT lab, pc_number FROM sit_ins WHERE id = ?");
+        $pc_stmt->execute([$sit_in_id]);
+        $pc_info = $pc_stmt->fetch(PDO::FETCH_ASSOC);
+        if ($pc_info && !empty($pc_info['lab']) && !empty($pc_info['pc_number'])) {
+            $set_pc_stmt = $pdo->prepare("UPDATE lab_pcs SET is_available = 1 WHERE lab = ? AND pc_number = ?");
+            $set_pc_stmt->execute([$pc_info['lab'], $pc_info['pc_number']]);
+        }
+        
+        // 2. Reduce remaining_sessions by 1 (just like a regular logout)
+        $reduce_sessions_stmt = $pdo->prepare("UPDATE users SET remaining_sessions = remaining_sessions - 1 WHERE id_number = ? AND remaining_sessions > 0");
+        $reduce_sessions_stmt->execute([$student_id]);
+    } catch (PDOException $e) {
+        error_log("Error logging out student: " . $e->getMessage());
+        throw new Exception("Failed to log out student: " . $e->getMessage());
+    }
     
     // Commit the transaction
     $pdo->commit();
@@ -89,7 +121,14 @@ try {
     // Rollback the transaction on error
     $pdo->rollBack();
     
+    // Log the error
+    error_log("Error in process_reward.php: " . $e->getMessage());
+    
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'An error occurred: ' . $e->getMessage(),
+        'error_details' => $e->getMessage() // Include error details for debugging
+    ]);
 }
 ?>
