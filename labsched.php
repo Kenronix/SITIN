@@ -95,13 +95,14 @@ $timeSlots = [
         <h2><i class="fas fa-laptop-code"></i> Admin Panel</h2>
         <ul>
             <li><a href="admin_dashboard.php"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="reservations.php"><i class="fas fa-calendar-check"></i> Pending Reservation</a></li>
+            <li><a href="reservations.php"><i class="fas fa-calendar-check"></i>Reservation</a></li>
+            <li><a href="reservation_log.php"><i class="fas fa-history"></i> Reservation Log</a></li> <!-- Added New Tab -->
             <li><a href="current_sitin.php"><i class="fas fa-users"></i> Current Sit-In</a></li>
             <li><a href="sitin_reports.php"><i class="fas fa-file-alt"></i> Sit-In Reports</a></li>
             <li><a href="students.php"><i class="fas fa-user-graduate"></i> Students</a></li>
             <li><a href="announcement.php"><i class="fas fa-bullhorn"></i> Announcement</a></li>
             <li><a href="feedback.php"><i class="fas fa-comment-alt"></i> Feedback</a></li>
-            <li><a href="labsched.php" class="active"><i class="fas fa-clock"></i> Lab Schedule</a></li>
+            <li><a href="labsched.php"  class="active"><i class="fas fa-clock"></i> Lab Schedule</a></li>
             <li><a href="resources.php"><i class="fas fa-book"></i> Lab Resources</a></li>
             <li><a href="leaderboard.php"><i class="fas fa-trophy"></i> Leaderboard</a></li>
             <li><a href="pc_management.php"><i class="fas fa-desktop"></i> PC Management</a></li>
